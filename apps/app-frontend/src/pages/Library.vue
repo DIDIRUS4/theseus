@@ -1,55 +1,43 @@
 <script setup>
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, shallowRef } from 'vue'
 import GridDisplay from '@/components/GridDisplay.vue'
+import { list } from '@/helpers/profile.js'
 import { useRoute } from 'vue-router'
 import { useBreadcrumbs } from '@/store/breadcrumbs'
-import { offline_listener, profile_listener } from '@/helpers/events.js'
-// import { handleError } from '@/store/notifications.js'
+import { profile_listener } from '@/helpers/events.js'
+import { handleError } from '@/store/notifications.js'
 import { Button } from '@modrinth/ui'
 import { PlusIcon } from '@modrinth/assets'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
 import { NewInstanceImage } from '@/assets/icons'
-import { isOffline } from '@/helpers/utils'
-import { i18n } from '@/main.js'
-import { useInstances } from '@/store/instances'
-import { storeToRefs } from 'pinia'
 
+import { i18n } from '@/main.js'
 const t = i18n.global.t
 const route = useRoute()
 const breadcrumbs = useBreadcrumbs()
 
 breadcrumbs.setRootContext({ name: 'Library', link: route.path })
 
-const instancesStore = useInstances()
-const { instanceList } = storeToRefs(instancesStore)
+const instances = shallowRef(await list().catch(handleError))
 
-const offline = ref(await isOffline())
-const unlistenOffline = await offline_listener((b) => {
-  offline.value = b
+const offline = ref(!navigator.onLine)
+window.addEventListener('offline', () => {
+  offline.value = true
+})
+window.addEventListener('online', () => {
+  offline.value = false
 })
 
 const unlistenProfile = await profile_listener(async () => {
-  await instancesStore.refreshInstances()
+  instances.value = await list().catch(handleError)
 })
-
 onUnmounted(() => {
   unlistenProfile()
-  unlistenOffline()
 })
-
-// TODO: Marked Library exception (issue) from forum discussions.
-/*
-This can help fix a rare exception with the active AR launcher window hanging.
-
-Reproducing the problem personally comes out using different paths, but this will most likely solve the problem,
-since it always requests an update of the list of instances every time you enter the Library section,
-as if it were a Reload function in debug or just a Route module in normal use, or the Library start page in Settings after next launcher boot or reload.
-*/
-await instancesStore.refreshInstances() 
 </script>
 
 <template>
-  <GridDisplay v-if="instanceList.length > 0" label="Instances" :instances="instanceList" />
+  <GridDisplay v-if="instances.length > 0" label="Instances" :instances="instanceList" />
   <div v-else class="no-instance">
     <div class="icon">
       <NewInstanceImage />

@@ -11,21 +11,21 @@ import { i18n } from '@/main.js'
 const t = i18n.global.t
 const themeStore = useTheming()
 
-const version = ref('')
-const title = ref('')
-const projectId = ref('')
-const icon = ref('')
+const versionId = ref()
+const project = ref()
 const confirmModal = ref(null)
 const installing = ref(false)
 
+let onInstall = ref(() => {})
+
 defineExpose({
-  show: (projectIdVal, versionId, projectTitle, projectIcon) => {
-    projectId.value = projectIdVal
-    version.value = versionId
-    title.value = projectTitle
-    icon.value = projectIcon
+  show: (projectVal, versionIdVal, callback) => {
+    project.value = projectVal
+    versionId.value = versionIdVal
     installing.value = false
     confirmModal.value.show()
+
+    onInstall.value = callback
 
     mixpanel_track('PackInstallStart')
   }
@@ -33,25 +33,33 @@ defineExpose({
 
 async function install() {
   installing.value = true
-  console.log(`Installing ${projectId.value} ${version.value} ${title.value} ${icon.value}`)
   confirmModal.value.hide()
+
   await pack_install(
-    projectId.value,
-    version.value,
-    title.value,
-    icon.value ? icon.value : null,
+    project.value.id,
+    versionId.value,
+    project.value.title,
+    project.value.icon_url,
   ).catch(handleError)
   mixpanel_track('PackInstall', {
-    id: projectId.value,
-    version_id: version.value,
-    title: title.value,
-    source: 'ConfirmModal'
+    id: project.value.id,
+    version_id: versionId.value,
+    title: project.value.title,
+    source: 'ConfirmModal',
   })
+
+  onInstall.value(versionId.value)
+  installing.value = false
 }
 </script>
 
 <template>
-  <Modal ref="confirmModal" :header="t('InstallConfirmModal.Question')" :noblur="!themeStore.advancedRendering">
+  <Modal
+    ref="confirmModal"
+    :header="t('InstallConfirmModal.Question')"
+    :noblur="!themeStore.advancedRendering"
+    :on-hide="onInstall"
+  >
     <div class="modal-body">
       <p>{{ t('InstallConfirmModal.QuestionDesc') }}</p>
       <div class="input-group push-right">

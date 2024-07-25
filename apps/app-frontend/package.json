@@ -1,8 +1,8 @@
 {
   "name": "@modrinth/app-frontend",
   "private": true,
-  "version": "0.7.3",
-  "patch_version": "01 • Beta",
+  "version": "0.8.0",
+  "patch_version": "01 • Alpha",
   "development_build": true,
   "type": "module",
   "scripts": {
@@ -28,7 +28,7 @@
     "vue-i18n": "^9.13.1",
     "vue-multiselect": "3.0.0-beta.3",
     "vue-router": "4.3.0",
-    "vue-virtual-scroller": "2.0.0-beta.8"
+    "vue-typed-virtual-list": "^1.0.10"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.1.0",

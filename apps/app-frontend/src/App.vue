@@ -1,7 +1,7 @@
 <script setup>
 import { i18n } from '@/main.js'
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { RouterView, RouterLink, useRouter, useRoute } from 'vue-router'
 import {
   HomeIcon,
   SearchIcon,
@@ -13,7 +13,6 @@ import {
 } from '@modrinth/assets'
 import { Button, Notifications, Card, Avatar } from '@modrinth/ui'
 import { useLoading, useTheming } from '@/store/state'
-import { useInstances } from '@/store/instances'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import AccountDropdown from '@/components/ui/AccountDropdown.vue'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
@@ -23,24 +22,17 @@ import RunningAppBar from '@/components/ui/RunningAppBar.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import ModrinthLoadingIndicator from '@/components/modrinth-loading-indicator'
 import { handleError, useNotifications } from '@/store/notifications.js'
-import { command_listener, offline_listener, warning_listener } from '@/helpers/events.js'
-import {
-  ArrowLeftFromLineIcon,
-  ArrowRightFromLineIcon,
-  ChatIcon,
-  MaximizeIcon,
-  MinimizeIcon,
-} from '@/assets/icons'
-import { getOS, isDev, isOffline, showLauncherLogsFolder } from '@/helpers/utils.js'
+import { command_listener, warning_listener } from '@/helpers/events.js'
+import { MinimizeIcon, MaximizeIcon, ChatIcon, ArrowLeftFromLineIcon, ArrowRightFromLineIcon } from '@/assets/icons'
+import { type } from '@tauri-apps/api/os'
+import { appWindow } from '@tauri-apps/api/window'
+import { isDev, getOS, showLauncherLogsFolder } from '@/helpers/utils.js'
 import {
   mixpanel_init,
   mixpanel_is_loaded,
   mixpanel_opt_out_tracking,
   mixpanel_track,
 } from '@/helpers/mixpanel.js'
-import { useDisableClicks } from '@/composables/click.js'
-import { openExternal } from '@/helpers/external.js'
-import { await_sync, check_safe_loading_bars_complete } from '@/helpers/state.js'
 import { install_from_file } from '@/helpers/pack.js'
 import { iconPathAsUrl } from '@/helpers/icon'
 
@@ -52,13 +44,15 @@ import { saveWindowState, StateFlags } from 'tauri-plugin-window-state-api'
 import { getVersion } from '@tauri-apps/api/app'
 import { window as TauriWindow } from '@tauri-apps/api'
 import { TauriEvent } from '@tauri-apps/api/event'
-import { confirm } from '@tauri-apps/api/dialog'
-import { type } from '@tauri-apps/api/os'
-import { appWindow } from '@tauri-apps/api/window'
 import { storeToRefs } from 'pinia'
 import { useLanguage } from '@/store/language.js'
 
 const t = i18n.global.t
+import { useError } from '@/store/error.js'
+import ModInstallModal from '@/components/ui/install_flow/ModInstallModal.vue'
+import IncompatibilityWarningModal from '@/components/ui/install_flow/IncompatibilityWarningModal.vue'
+import InstallConfirmModal from '@/components/ui/install_flow/InstallConfirmModal.vue'
+import { useInstall } from '@/store/install.js'
 
 const themeStore = useTheming()
 const languageStore = useLanguage()
@@ -66,8 +60,14 @@ const languageStore = useLanguage()
 const urlModal = ref(null)
 const isLoading = ref(true)
 
-const videoPlaying = ref(false)
-const offline = ref(false)
+const offline = ref(!navigator.onLine)
+window.addEventListener('offline', () => {
+  offline.value = true
+})
+window.addEventListener('online', () => {
+  offline.value = false
+})
+
 const showOnboarding = ref(false)
 const nativeDecorations = ref(false)
 
@@ -76,10 +76,6 @@ const sidebarOpen = ref(false)
 const failureText = ref(null)
 const os = ref('')
 
-const instances = useInstances()
-const { instancesByPlayed } = storeToRefs(instances)
-watch(() => instances)
-
 defineExpose({
   initialize: async () => {
     isLoading.value = false
@@ -87,17 +83,17 @@ defineExpose({
       native_decorations,
       theme,
       language,
-      opt_out_analytics,
+      telemetry,
       collapsed_navigation,
       advanced_rendering,
-      fully_onboarded,
+      onboarded,
     } = await get()
     // video should play if the user is not on linux, and has not onboarded
     os.value = await getOS()
     // videoPlaying.value = !fully_onboarded && os.value !== 'Linux'
     const dev = await isDev()
     const version = await getVersion()
-    showOnboarding.value = !fully_onboarded
+    showOnboarding.value = !onboarded
 
     nativeDecorations.value = native_decorations
     if (os.value !== 'MacOS') appWindow.setDecorations(native_decorations)
@@ -108,14 +104,14 @@ defineExpose({
     themeStore.advancedRendering = advanced_rendering
 
     mixpanel_init('014c7d6a336d0efaefe3aca91063748d', { debug: dev, persistence: 'localStorage' })
-    if (opt_out_analytics) {
+    if (telemetry) {
       console.info(
-        '[AR • Hard Disable Patch] • OPT_OUT_ANALYTICS (DISABLED) status is ',
-        opt_out_analytics,
+        '[AR • Hard Disable Patch] • TELEMETRY (DISABLED) status is ',
+        telemetry,
       )
       mixpanel_opt_out_tracking()
     }
-    mixpanel_track('Launched', { version, dev, fully_onboarded })
+    mixpanel_track('Launched', { version, dev, onboarded })
 
     if (!dev) document.addEventListener('contextmenu', (event) => event.preventDefault())
 
@@ -124,11 +120,6 @@ defineExpose({
     } else {
       document.getElementsByTagName('html')[0].classList.add('windows')
     }
-
-    offline.value = await isOffline()
-    await offline_listener((b) => {
-      offline.value = b
-    })
 
     await warning_listener((e) =>
       notificationsWrapper.value.addNotification({
@@ -149,45 +140,12 @@ defineExpose({
   },
 })
 
-const confirmClose = async () => {
-  const confirmed = await confirm(
-    'An action is currently in progress. Are you sure you want to exit?',
-    {
-      title: 'AstralRinth',
-      type: 'warning',
-    },
-  )
-  return confirmed
-}
-
 const handleClose = async () => {
-  if (failureText.value != null) {
-    await TauriWindow.getCurrent().close()
-    return
-  }
-  // State should respond immeiately if it's safe to close
-  // If not, code is deadlocked or worse, so wait 2 seconds and then ask the user to confirm closing
-  // (Exception: if the user is changing config directory, which takes control of the state, and it's taking a significant amount of time for some reason)
-  const isSafe = await Promise.race([
-    check_safe_loading_bars_complete(),
-    new Promise((r) => setTimeout(r, 2000)),
-  ])
-  if (!isSafe) {
-    const response = await confirmClose()
-    if (!response) {
-      return
-    }
-  }
-  await await_sync()
   await TauriWindow.getCurrent().close()
 }
 
-const openSupport = () => openExternal(window, 'https://www.astralium.su/follow/telegram/astralium')
-
-onMounted(() => {
-  return TauriWindow.getCurrent().listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async () => {
-    await handleClose()
-  })
+TauriWindow.getCurrent().listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async () => {
+  await handleClose()
 })
 
 const router = useRouter()
@@ -203,11 +161,63 @@ const loading = useLoading()
 const notifications = useNotifications()
 const notificationsWrapper = ref(null)
 
-watch(notificationsWrapper, () => {
+const error = useError()
+const errorModal = ref()
+
+const install = useInstall()
+const modInstallModal = ref()
+const installConfirmModal = ref()
+const incompatibilityWarningModal = ref()
+
+onMounted(() => {
   notifications.setNotifs(notificationsWrapper.value)
+
+  error.setErrorModal(errorModal.value)
+
+  install.setIncompatibilityWarningModal(incompatibilityWarningModal)
+  install.setInstallConfirmModal(installConfirmModal)
+  install.setModInstallModal(modInstallModal)
 })
 
-useDisableClicks(document, window)
+document.querySelector('body').addEventListener('click', function (e) {
+  let target = e.target
+  while (target != null) {
+    if (target.matches('a')) {
+      if (
+        target.href &&
+        ['http://', 'https://', 'mailto:', 'tel:'].some((v) => target.href.startsWith(v)) &&
+        !target.classList.contains('router-link-active') &&
+        !target.href.startsWith('http://localhost') &&
+        !target.href.startsWith('https://tauri.localhost')
+      ) {
+        window.__TAURI_INVOKE__('tauri', {
+          __tauriModule: 'Shell',
+          message: {
+            cmd: 'open',
+            path: target.href,
+          },
+        })
+      }
+      e.preventDefault()
+      break
+    }
+    target = target.parentElement
+  }
+})
+
+document.querySelector('body').addEventListener('auxclick', function (e) {
+  // disables middle click -> new tab
+  if (e.button === 1) {
+    e.preventDefault()
+    // instead do a left click
+    const event = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    })
+    e.target.dispatchEvent(event)
+  }
+})
 
 const accounts = ref(null)
 
@@ -287,10 +297,9 @@ async function openInstance(instance) {
         </Card>
 
         <div class="button-row push-right">
-          <Button @click="showLauncherLogsFolder">
-            <FileIcon />
-            Open launcher logs
-          </Button>
+          <Button @click="showLauncherLogsFolder"><FileIcon />Open launcher logs</Button>
+
+          <a class="btn" href="https://www.astralium.su/follow/telegram/astralium"> <ChatIcon /> Get support </a>
         </div>
       </Card>
     </div>
@@ -410,6 +419,10 @@ async function openInstance(instance) {
   </div>
   <URLConfirmModal ref="urlModal" />
   <Notifications ref="notificationsWrapper" />
+  <ErrorModal ref="errorModal" />
+  <ModInstallModal ref="modInstallModal" />
+  <IncompatibilityWarningModal ref="incompatibilityWarningModal" />
+  <InstallConfirmModal ref="installConfirmModal" />
 </template>
 
 <style lang="scss" scoped>
@@ -734,14 +747,6 @@ async function openInstance(instance) {
       transition: all ease-in-out 0.1s;
     }
   }
-}
-
-.video {
-  margin-top: 2.25rem;
-  width: 100vw;
-  height: calc(100vh - 2.25rem);
-  object-fit: cover;
-  border-radius: var(--radius-md);
 }
 
 .button-row {
