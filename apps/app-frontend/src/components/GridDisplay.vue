@@ -124,6 +124,9 @@ const handleOptionsClick = async (args) => {
 }
 
 const search = ref('')
+sortBy.value = t('GridDisplay.Name')
+filters.value = t('GridDisplay.AllProf')
+group.value = t('GridDisplay.None')
 
 const filteredResults = computed(() => {
   let instances = props.instances.filter((instance) => {

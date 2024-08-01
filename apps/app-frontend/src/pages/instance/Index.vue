@@ -152,13 +152,12 @@ import { showProfileInFolder } from '@/helpers/utils.js'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
 import { mixpanel_track } from '@/helpers/mixpanel'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
-import { useFetch } from '@/helpers/fetch'
+// import { useFetch } from '@/helpers/fetch'
 import { handleSevereError } from '@/store/error.js'
 import { get_project, get_version_many } from '@/helpers/cache.js'
 import dayjs from 'dayjs'
 
-
-import { i18n } from '@/main.js';
+import { i18n } from '@/main.js'
 const t = i18n.global.t;
 const props = defineProps({
   id: {
@@ -222,8 +221,6 @@ const startInstance = async (context) => {
     game_version: instance.value.game_version,
     source: context,
   })
-
-  await instancesStore.refreshInstances()
 }
 
 const checkProcess = async () => {

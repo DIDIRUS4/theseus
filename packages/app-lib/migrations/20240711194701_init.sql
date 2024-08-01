@@ -4,14 +4,15 @@ CREATE TABLE settings (
     max_concurrent_downloads INTEGER NOT NULL DEFAULT 10,
     max_concurrent_writes INTEGER NOT NULL DEFAULT 10,
 
-    theme TEXT NOT NULL DEFAULT 'dark',
+    theme TEXT NOT NULL DEFAULT 'oled',
     default_page TEXT NOT NULL DEFAULT 'home',
+    language TEXT NOT NULL DEFAULT 'english',
     collapsed_navigation INTEGER NOT NULL DEFAULT TRUE,
     advanced_rendering INTEGER NOT NULL DEFAULT TRUE,
     native_decorations INTEGER NOT NULL DEFAULT FALSE,
 
     telemetry INTEGER NOT NULL DEFAULT TRUE,
-    discord_rpc INTEGER NOT NULL DEFAULT TRUE,
+    discord_rpc INTEGER NOT NULL DEFAULT FALSE,
     developer_mode INTEGER NOT NULL DEFAULT FALSE,
 
     onboarded INTEGER NOT NULL DEFAULT FALSE,
@@ -59,7 +60,6 @@ CREATE TABLE minecraft_users (
 
     PRIMARY KEY (uuid)
 );
-CREATE UNIQUE INDEX minecraft_users_active ON minecraft_users(active);
 
 CREATE TABLE minecraft_device_tokens (
     id INTEGER NOT NULL CHECK (id = 0),

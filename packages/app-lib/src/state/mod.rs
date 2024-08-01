@@ -124,10 +124,10 @@ impl State {
 
         let directories = DirectoryInfo::init(settings.custom_dir).await?;
 
-        let mut settings = Settings::get(&pool).await?;
+        let settings = Settings::get(&pool).await?;
 
         let discord_rpc = DiscordGuard::init().await?;
-        if settings.discord_rpc {
+        if !settings.discord_rpc {
             // Add default Idling to discord rich presence
             // Force add to avoid recursion
             let selected_phrase = crate::state::discord::INACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();

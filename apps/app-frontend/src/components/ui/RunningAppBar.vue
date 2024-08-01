@@ -9,7 +9,7 @@
       v-if="currentLoadingBars.length > 0"
       ref="infoButton"
       icon-only
-      class="download icon-button"
+      class="download"
       @click="toggleCard()"
     >
       <DownloadIcon />
@@ -395,7 +395,7 @@ await getRemote(true, false)
   color: #3e8cde;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-button-bg);
-  padding: var(--gap-sm) var(--gap-lg);
+  // padding: var(--gap-sm) var(--gap-lg);
   background-color: rgba(0, 0, 0, 0);
   text-decoration: none;
   text-shadow:

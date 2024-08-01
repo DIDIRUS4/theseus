@@ -1,6 +1,5 @@
 //! Theseus settings file
 use serde::{Deserialize, Serialize};
-
 // Types
 /// Global Theseus settings
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,7 +40,7 @@ impl Settings {
             "
             SELECT
                 max_concurrent_writes, max_concurrent_downloads,
-                theme, default_page, collapsed_navigation, advanced_rendering, native_decorations,
+                theme, default_page, language, collapsed_navigation, advanced_rendering, native_decorations,
                 discord_rpc, developer_mode, telemetry,
                 onboarded,
                 json(extra_launch_args) extra_launch_args, json(custom_env_vars) custom_env_vars,
@@ -58,15 +57,15 @@ impl Settings {
             max_concurrent_downloads: res.max_concurrent_downloads as usize,
             max_concurrent_writes: res.max_concurrent_writes as usize,
             theme: Theme::from_string(&res.theme),
-            language: Language::English,
             default_page: DefaultPage::from_string(&res.default_page),
+            language: Language::from_string(&res.language),
             collapsed_navigation: res.collapsed_navigation == 1,
             advanced_rendering: res.advanced_rendering == 1,
             native_decorations: res.native_decorations == 1,
             telemetry: res.telemetry == 1,
-            discord_rpc: res.discord_rpc == 0,
-            developer_mode: res.developer_mode == 0,
-            onboarded: res.onboarded == 0,
+            discord_rpc: res.discord_rpc == 1,
+            developer_mode: res.developer_mode == 1,
+            onboarded: res.onboarded == 1,
             extra_launch_args: res
                 .extra_launch_args
                 .and_then(|x| serde_json::from_str(&x).ok())
@@ -103,6 +102,7 @@ impl Settings {
         let max_concurrent_downloads = self.max_concurrent_downloads as i32;
         let theme = self.theme.as_str();
         let default_page = self.default_page.as_str();
+        let language = self.language.as_str();
         let extra_launch_args = serde_json::to_string(&self.extra_launch_args)?;
         let custom_env_vars = serde_json::to_string(&self.custom_env_vars)?;
 
@@ -139,7 +139,8 @@ impl Settings {
 
                 custom_dir = $22,
                 prev_custom_dir = $23,
-                migrated = $24
+                migrated = $24,
+                language = $25
             ",
             max_concurrent_writes,
             max_concurrent_downloads,
@@ -164,7 +165,8 @@ impl Settings {
             self.hooks.post_exit,
             self.custom_dir,
             self.prev_custom_dir,
-            self.migrated
+            self.migrated,
+            language
         )
         .execute(exec)
         .await?;
@@ -205,7 +207,24 @@ impl Theme {
 #[serde(rename_all = "snake_case")]
 pub enum Language {
     English,
-    Russian
+    Russian,
+}
+
+impl Language {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Language::English => "english",
+            Language::Russian => "russian",
+        }
+    }
+
+    pub fn from_string(string: &str) -> Language {
+        match string {
+            "english" => Language::English,
+            "russian" => Language::Russian,
+            _ => Language::English,
+        }
+    }
 }
 
 /// Minecraft memory settings

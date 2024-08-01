@@ -646,7 +646,7 @@ pub async fn launch_minecraft(
             }
         }
     }
-
+    
     let selected_phrase = ACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();
         let _ = state
             .discord_rpc

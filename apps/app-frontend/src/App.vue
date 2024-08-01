@@ -13,7 +13,6 @@ import {
 import { Button, Notifications, Card, Avatar } from '@modrinth/ui'
 import { useLoading, useTheming } from '@/store/state'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
-import AccountDropdown from '@/components/ui/AccountDropdown.vue'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
 import { get, set } from '@/helpers/settings'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
@@ -22,7 +21,13 @@ import SplashScreen from '@/components/ui/SplashScreen.vue'
 import ModrinthLoadingIndicator from '@/components/modrinth-loading-indicator'
 import { handleError, useNotifications } from '@/store/notifications.js'
 import { command_listener, warning_listener } from '@/helpers/events.js'
-import { MinimizeIcon, MaximizeIcon, ChatIcon, ArrowLeftFromLineIcon, ArrowRightFromLineIcon } from '@/assets/icons'
+import {
+  MinimizeIcon,
+  MaximizeIcon,
+  ChatIcon,
+  ArrowLeftFromLineIcon,
+  ArrowRightFromLineIcon,
+} from '@/assets/icons'
 import { type } from '@tauri-apps/api/os'
 import { appWindow } from '@tauri-apps/api/window'
 import { isDev, getOS, showLauncherLogsFolder } from '@/helpers/utils.js'
@@ -33,7 +38,7 @@ import {
   mixpanel_track,
 } from '@/helpers/mixpanel.js'
 import { install_from_file } from '@/helpers/pack.js'
-import { iconPathAsUrl } from '@/helpers/icon'
+// import { iconPathAsUrl } from '@/helpers/icon'
 
 import URLConfirmModal from '@/components/ui/URLConfirmModal.vue'
 // import StickyTitleBar from '@/components/ui/tutorial/StickyTitleBar.vue'
@@ -297,7 +302,9 @@ const toggleSidebar = () => {
         <div class="button-row push-right">
           <Button @click="showLauncherLogsFolder"><FileIcon />Open launcher logs</Button>
 
-          <a class="btn" href="https://www.astralium.su/follow/telegram/astralium"> <ChatIcon /> Get support </a>
+          <a class="btn" href="https://www.astralium.su/follow/telegram/astralium">
+            <ChatIcon /> Get support
+          </a>
         </div>
       </Card>
     </div>
@@ -305,12 +312,22 @@ const toggleSidebar = () => {
   <SplashScreen v-else-if="!videoPlaying && isLoading" app-loading />
   <OnboardingScreen v-else-if="showOnboarding" :finish="() => (showOnboarding = false)" />
   <div v-else class="container">
-    <div class="nav-container" data-tauri-drag-region :class="`${sidebarOpen ? 'nav-container__open' : ''}`" :style="{
-      '--sidebar-label-opacity': sidebarOpen ? '1' : '0',
-    }">
+    <div
+      class="nav-container"
+      data-tauri-drag-region
+      :class="`${sidebarOpen ? 'nav-container__open' : ''}`"
+      :style="{
+        '--sidebar-label-opacity': sidebarOpen ? '1' : '0',
+      }"
+    >
       <div class="pages-list">
         <div class="square-collapsed-space">
-          <Button transparent icon-only class="collapsed-button non-collapse" @click="toggleSidebar">
+          <Button
+            transparent
+            icon-only
+            class="collapsed-button non-collapse"
+            @click="toggleSidebar"
+          >
             <ArrowRightFromLineIcon v-if="!sidebarOpen" />
             <ArrowLeftFromLineIcon v-else />
           </Button>
@@ -325,9 +342,13 @@ const toggleSidebar = () => {
             <HomeIcon />
             <span class="collapsed-button__label">{{ t('Application.Home') }}</span>
           </RouterLink>
-          <RouterLink to="/browse/modpack" class="btn icon-only collapsed-button" :class="{
-            'router-link-active': isOnBrowse,
-          }">
+          <RouterLink
+            to="/browse/modpack"
+            class="btn icon-only collapsed-button"
+            :class="{
+              'router-link-active': isOnBrowse,
+            }"
+          >
             <SearchIcon />
             <span class="collapsed-button__label">{{ t('Application.Browse') }}</span>
           </RouterLink>
@@ -346,13 +367,17 @@ const toggleSidebar = () => {
       <div class="divider">
         <hr />
       </div> -->
-      <div class="settings pages-list">
+      <div class="pages-list">
         <RouterLink to="/settings" class="btn icon-only collapsed-button">
           <SettingsIcon />
           <span class="collapsed-button__label">{{ t('Application.Settings') }}</span>
         </RouterLink>
-        <Button class="page-item collapsed-button" icon-only :disabled="offline"
-          @click="() => $refs.installationModal.show()">
+        <Button
+          class="page-item collapsed-button"
+          icon-only
+          :disabled="offline"
+          @click="() => $refs.installationModal.show()"
+        >
           <PlusIcon />
           <span class="collapsed-button__label">{{ t('Application.CreateProfile') }}</span>
         </Button>
@@ -381,18 +406,25 @@ const toggleSidebar = () => {
           <Button class="titlebar-button" icon-only @click="() => appWindow.toggleMaximize()">
             <MaximizeIcon />
           </Button>
-          <Button class="titlebar-button close" icon-only @click="() => {
-            saveWindowState(StateFlags.ALL)
-            handleClose()
-          }
-            ">
+          <Button
+            class="titlebar-button close"
+            icon-only
+            @click="
+              () => {
+                saveWindowState(StateFlags.ALL)
+                handleClose()
+              }
+            "
+          >
             <XIcon />
           </Button>
         </section>
       </div>
       <div class="router-view">
-        <ModrinthLoadingIndicator offset-height="var(--appbar-height)"
-          :offset-width="sidebarOpen ? 'var(--sidebar-open-width)' : 'var(--sidebar-width)'" />
+        <ModrinthLoadingIndicator
+          offset-height="var(--appbar-height)"
+          :offset-width="sidebarOpen ? 'var(--sidebar-open-width)' : 'var(--sidebar-width)'"
+        />
         <RouterView v-slot="{ Component }">
           <template v-if="Component">
             <Suspense @pending="loading.startLoading()" @resolve="loading.stopLoading()">
@@ -454,7 +486,6 @@ const toggleSidebar = () => {
     height: var(--appbar-height);
 
     &.close {
-
       &:hover,
       &:active {
         background-color: var(--color-red);
@@ -637,12 +668,12 @@ const toggleSidebar = () => {
   padding-right: var(--sidebar-padding);
 }
 
-.instances {
-  flex: 1;
+// .instances {
+//   flex: 1;
 
-  flex-flow: column wrap; // This hides any elements that aren't fully visible
-  overflow: hidden;
-}
+//   flex-flow: column wrap; // This hides any elements that aren't fully visible
+//   overflow: hidden;
+// }
 
 .pages-list {
   display: flex;
