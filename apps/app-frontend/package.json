@@ -2,7 +2,7 @@
   "name": "@modrinth/app-frontend",
   "private": true,
   "version": "0.8.0",
-  "patch_version": "01 • Alpha",
+  "patch_version": "02 • Alpha",
   "development_build": true,
   "type": "module",
   "scripts": {
@@ -31,7 +31,6 @@
     "vue-typed-virtual-list": "^1.0.10"
   },
   "devDependencies": {
-    "@rollup/plugin-alias": "^5.1.0",
     "@tauri-apps/cli": "^1.6.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "eslint": "^8.57.0",

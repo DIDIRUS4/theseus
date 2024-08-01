@@ -124,7 +124,7 @@ impl State {
 
         let directories = DirectoryInfo::init(settings.custom_dir).await?;
 
-        emit_loading(&loading_bar, 10.0, None).await?;
+        let mut settings = Settings::get(&pool).await?;
 
         let discord_rpc = DiscordGuard::init().await?;
         if settings.discord_rpc {

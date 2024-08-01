@@ -3,15 +3,12 @@
     <div v-if="data" class="project-sidebar">
       <Card v-if="instance" class="small-instance">
         <router-link class="instance" :to="`/instance/${encodeURIComponent(instance.path)}`">
-          <Avatar
-            :src="instance.icon_path ? convertFileSrc(instance.icon_path) : null"
-            :alt="instance.name"
-            size="sm"
-          />
+          <Avatar :src="instance.icon_path ? convertFileSrc(instance.icon_path) : null" :alt="instance.name"
+            size="sm" />
           <div class="small-instance_info">
             <span class="title">{{
               instance.name.length > 20 ? instance.name.substring(0, 20) + '...' : instance.name
-            }}</span>
+              }}</span>
             <span>
               {{ instance.loader.charAt(0).toUpperCase() + instance.loader.slice(1) }}
               {{ instance.game_version }}
@@ -25,38 +22,22 @@
           <h2 class="name">{{ data.title }}</h2>
           {{ data.description }}
         </div>
-        <Categories
-          class="tags"
-          :categories="
-            categories.filter(
-              (cat) => data.categories.includes(cat.name) && cat.project_type === 'mod',
-            )
-          "
-          type="ignored"
-        >
-          <EnvironmentIndicator
-            :client-side="data.client_side"
-            :server-side="data.server_side"
-            :type="data.project_type"
-          />
+        <Categories class="tags" :categories="categories.filter(
+          (cat) => data.categories.includes(cat.name) && cat.project_type === 'mod',
+        )
+          " type="ignored">
+          <EnvironmentIndicator :client-side="data.client_side" :server-side="data.server_side"
+            :type="data.project_type" />
         </Categories>
         <hr class="card-divider" />
         <div class="button-group">
-          <Button
-            color="primary"
-            class="instance-button"
-            :disabled="installed === true || installing === true"
-            @click="install(null)"
-          >
+          <Button color="primary" class="instance-button" :disabled="installed === true || installing === true"
+            @click="install(null)">
             <DownloadIcon v-if="!installed && !installing" />
             <CheckIcon v-else-if="installed" />
             {{ installing ? t('Index.Installing') : installed ? t('Index.Installed') : t('Index.Install') }}
           </Button>
-          <a
-            :href="`https://modrinth.com/${data.project_type}/${data.slug}`"
-            rel="external"
-            class="btn"
-          >
+          <a :href="`https://modrinth.com/${data.project_type}/${data.slug}`" rel="external" class="btn">
             <ExternalIcon />
             {{ t('Index.Site') }}
           </a>
@@ -67,29 +48,23 @@
             <DownloadIcon aria-hidden="true" />
             <p>
               <strong>{{ formatNumber(data.downloads) }}</strong>
-              <span class="stat-label"> download<span
-                v-if="data.downloads !== '1'">s</span></span>
+              <span class="stat-label"> download<span v-if="data.downloads !== '1'">s</span></span>
             </p>
           </div>
           <div class="stat">
             <HeartIcon aria-hidden="true" />
             <p>
               <strong>{{ formatNumber(data.followers) }}</strong>
-              <span class="stat-label"> follower<span
-                v-if="data.followers !== '1'">s</span></span>
+              <span class="stat-label"> follower<span v-if="data.followers !== '1'">s</span></span>
             </p>
           </div>
           <div class="stat date">
             <CalendarIcon aria-hidden="true" />
-            <span
-            ><span class="date-label">Created </span> {{ dayjs(data.published).fromNow() }}</span
-            >
+            <span><span class="date-label">Created </span> {{ dayjs(data.published).fromNow() }}</span>
           </div>
           <div class="stat date">
             <UpdatedIcon aria-hidden="true" />
-            <span
-            ><span class="date-label">Updated </span> {{ dayjs(data.updated).fromNow() }}</span
-            >
+            <span><span class="date-label">Updated </span> {{ dayjs(data.updated).fromNow() }}</span>
           </div>
         </div>
         <hr class="card-divider" />
@@ -105,48 +80,24 @@
         </div>
         <hr class="card-divider" />
         <div class="links">
-          <a
-            v-if="data.issues_url"
-            :href="data.issues_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.issues_url" :href="data.issues_url" class="title" rel="noopener nofollow ugc external">
             <IssuesIcon aria-hidden="true" />
             <span>{{ t('Index.Issues') }}</span>
           </a>
-          <a
-            v-if="data.source_url"
-            :href="data.source_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.source_url" :href="data.source_url" class="title" rel="noopener nofollow ugc external">
             <CodeIcon aria-hidden="true" />
             <span>{{ t('Index.Source') }}</span>
           </a>
-          <a
-            v-if="data.wiki_url"
-            :href="data.wiki_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.wiki_url" :href="data.wiki_url" class="title" rel="noopener nofollow ugc external">
             <WikiIcon aria-hidden="true" />
             <span>{{ t('Index.Wiki') }}</span>
           </a>
-          <a
-            v-if="data.discord_url"
-            :href="data.discord_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.discord_url" :href="data.discord_url" class="title" rel="noopener nofollow ugc external">
             <DiscordIcon aria-hidden="true" />
             <span>{{ t('Index.Discord') }}</span>
           </a>
-          <a
-            v-for="(donation, index) in data.donation_urls"
-            :key="index"
-            :href="donation.url"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-for="(donation, index) in data.donation_urls" :key="index" :href="donation.url"
+            rel="noopener nofollow ugc external">
             <BuyMeACoffeeIcon v-if="donation.id === 'bmac'" aria-hidden="true" />
             <PatreonIcon v-else-if="donation.id === 'patreon'" aria-hidden="true" />
             <KoFiIcon v-else-if="donation.id === 'ko-fi'" aria-hidden="true" />
@@ -167,47 +118,33 @@
     <div v-if="data" class="content-container">
       <!--      <Promotion :external="false" query-param="?r=launcher" />-->
       <Card class="tabs">
-        <NavRow
-          v-if="data.gallery.length > 0"
-          :links="[
-            {
-              label: t('Index.Description'),
-              href: `/project/${$route.params.id}/`,
-            },
-            {
-              label: t('Index.Versions'),
-              href: `/project/${$route.params.id}/versions`,
-            },
-            {
-              label: t('Index.Gallery'),
-              href: `/project/${$route.params.id}/gallery`,
-            },
-          ]"
-        />
-        <NavRow
-          v-else
-          :links="[
-            {
-              label: t('Index.Description'),
-              href: `/project/${$route.params.id}/`,
-            },
-            {
-              label: t('Index.Versions'),
-              href: `/project/${$route.params.id}/versions`,
-            },
-          ]"
-        />
+        <NavRow v-if="data.gallery.length > 0" :links="[
+          {
+            label: t('Index.Description'),
+            href: `/project/${$route.params.id}/`,
+          },
+          {
+            label: t('Index.Versions'),
+            href: `/project/${$route.params.id}/versions`,
+          },
+          {
+            label: t('Index.Gallery'),
+            href: `/project/${$route.params.id}/gallery`,
+          },
+        ]" />
+        <NavRow v-else :links="[
+          {
+            label: t('Index.Description'),
+            href: `/project/${$route.params.id}/`,
+          },
+          {
+            label: t('Index.Versions'),
+            href: `/project/${$route.params.id}/versions`,
+          },
+        ]" />
       </Card>
-      <RouterView
-        :project="data"
-        :versions="versions"
-        :members="members"
-        :instance="instance"
-        :install="install"
-        :installed="installed"
-        :installing="installing"
-        :installed-version="installedVersion"
-      />
+      <RouterView :project="data" :versions="versions" :members="members" :instance="instance" :install="install"
+        :installed="installed" :installing="installing" :installed-version="installedVersion" />
     </div>
   </div>
   <ContextMenu ref="options" @option-clicked="handleOptionsClick">
@@ -269,12 +206,12 @@ import { useBreadcrumbs } from '@/store/breadcrumbs'
 import { handleError } from '@/store/notifications.js'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
-import { i18n } from '@/main.js'
 import { install as installVersion } from '@/store/install.js'
 import { get_project, get_project_many, get_team, get_version_many } from '@/helpers/cache.js'
 
 dayjs.extend(relativeTime)
 
+import { i18n } from '@/main.js'
 const t = i18n.global.t
 const route = useRoute()
 const breadcrumbs = useBreadcrumbs()
@@ -295,14 +232,14 @@ async function fetchProjectData() {
   const project = await get_project(route.params.id).catch(handleError)
 
   data.value = project
-  ;[versions.value, members.value, categories.value, instance.value, instanceProjects.value] =
-    await Promise.all([
-      get_version_many(project.versions).catch(handleError),
-      get_team(project.team).catch(handleError),
-      get_categories().catch(handleError),
-      route.query.i ? getInstance(route.query.i).catch(handleError) : Promise.resolve(),
-      route.query.i ? getInstanceProjects(route.query.i).catch(handleError) : Promise.resolve(),
-    ])
+    ;[versions.value, members.value, categories.value, instance.value, instanceProjects.value] =
+      await Promise.all([
+        get_version_many(project.versions).catch(handleError),
+        get_team(project.team).catch(handleError),
+        get_categories().catch(handleError),
+        route.query.i ? getInstance(route.query.i).catch(handleError) : Promise.resolve(),
+        route.query.i ? getInstanceProjects(route.query.i).catch(handleError) : Promise.resolve(),
+      ])
 
   versions.value = versions.value.sort((a, b) => dayjs(b.date_published) - dayjs(a.date_published))
 
@@ -503,6 +440,7 @@ const handleOptionsClick = (args) => {
 
     &:focus-visible,
     &:hover {
+
       svg,
       img,
       span {
@@ -511,6 +449,7 @@ const handleOptionsClick = (args) => {
     }
 
     &:active {
+
       svg,
       img,
       span {

@@ -190,9 +190,9 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBreadcrumbs } from '@/store/breadcrumbs'
 import { SwapIcon } from '@/assets/icons'
-import { i18n } from '@/main.js'
 import { get_project_many, get_version_many } from '@/helpers/cache.js'
 
+import { i18n } from '@/main.js'
 const t = i18n.global.t
 const breadcrumbs = useBreadcrumbs()
 

@@ -30,12 +30,9 @@ import {
   latestBetaCommitTruncatedSha,
 } from '@/helpers/update.js'
 const t = i18n.global.t
-import { storeToRefs } from 'pinia'
-import { getVersion } from '@tauri-apps/api/app'
 import { get_user } from '@/helpers/cache.js'
 
 const pageOptions = ['Home', 'Library']
-
 const themeStore = useTheming()
 const languageStore = useLanguage()
 
@@ -161,12 +158,12 @@ await getBranches()
       <div class="adjacent-input">
         <label for="theme">
           <span class="label__title">{{ t('Settings.ManageAccount') }}</span>
-          <span v-if="auth" class="label__description">
-            {{ t('Settings.YouAreCurrentlyLoggedInAs') }} {{ auth?.user.username }}.
+          <span v-if="credentials" class="label__description">
+            {{ t('Settings.ManageAccount') }} {{ credentials.user.username }}.
           </span>
           <span v-else> {{ t('Settings.SignInToYourModrinthAccount') }} </span>
         </label>
-        <button v-if="auth" class="btn" @click="mrAuth.logout()">
+        <button v-if="credentials" class="btn" @click="logOut">
           <LogOutIcon />
           {{ t('Settings.SignOut') }}
         </button>
@@ -235,7 +232,7 @@ await getBranches()
           @change="
             (e) => {
               languageStore.setLanguageState(e.option.toLowerCase())
-              settings.language = languageStore.selectedLanguage
+              settings.language = e.option
             }
           "
         />
@@ -385,6 +382,11 @@ await getBranches()
           id="disable-discord-rpc"
           v-model="settings.discord_rpc"
           :checked="settings.discord_rpc"
+          @update:model-value="
+            (e) => {
+              settings.discord_rpc = e
+            }
+          "
         />
       </div>
     </Card>
@@ -775,10 +777,6 @@ a.github:active {
 
 .language-dropdown {
   text-transform: capitalize;
-}
-
-.card-divider {
-  margin: 1rem 0;
 }
 
 .app-directory {

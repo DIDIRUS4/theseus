@@ -19,19 +19,7 @@ use daedalus::modded::LoaderVersion;
 use st::Profile;
 use std::collections::HashMap;
 use tokio::process::Command;
-
-// use crate::{
-//     process,
-//     state::{MinecraftChild, self as st},
-//     State,
-// };
-// use crate::event::{LoadingBarId, LoadingBarType};
-// use crate::event::emit::{emit_loading, init_or_edit_loading};
-// use crate::jre::{self, JAVA_17_KEY, JAVA_18PLUS_KEY, JAVA_8_KEY};
-// use crate::launcher::io::IOError;
-// use crate::prelude::JavaVersion;
 use crate::state::ACTIVE_PHRASES;
-// use crate::util::io;
 
 mod args;
 
@@ -260,7 +248,7 @@ pub async fn install_minecraft(
         Some(repairing),
         Some(&loading_bar),
     )
-        .await?;
+    .await?;
 
     let key = version_info
         .java_version

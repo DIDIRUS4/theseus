@@ -1,6 +1,5 @@
 <script setup>
-import { i18n } from '@/main.js'
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { RouterView, RouterLink, useRouter, useRoute } from 'vue-router'
 import {
   HomeIcon,
@@ -16,7 +15,7 @@ import { useLoading, useTheming } from '@/store/state'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import AccountDropdown from '@/components/ui/AccountDropdown.vue'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
-import { get } from '@/helpers/settings'
+import { get, set } from '@/helpers/settings'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
 import RunningAppBar from '@/components/ui/RunningAppBar.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
@@ -44,10 +43,8 @@ import { saveWindowState, StateFlags } from 'tauri-plugin-window-state-api'
 import { getVersion } from '@tauri-apps/api/app'
 import { window as TauriWindow } from '@tauri-apps/api'
 import { TauriEvent } from '@tauri-apps/api/event'
-import { storeToRefs } from 'pinia'
 import { useLanguage } from '@/store/language.js'
 
-const t = i18n.global.t
 import { useError } from '@/store/error.js'
 import ModInstallModal from '@/components/ui/install_flow/ModInstallModal.vue'
 import IncompatibilityWarningModal from '@/components/ui/install_flow/IncompatibilityWarningModal.vue'
@@ -55,8 +52,9 @@ import InstallConfirmModal from '@/components/ui/install_flow/InstallConfirmModa
 import { useInstall } from '@/store/install.js'
 
 const themeStore = useTheming()
+import { i18n } from '@/main.js'
+const t = i18n.global.t
 const languageStore = useLanguage()
-
 const urlModal = ref(null)
 const isLoading = ref(true)
 
@@ -88,6 +86,7 @@ defineExpose({
       advanced_rendering,
       onboarded,
     } = await get()
+    const settings = await get()
     // video should play if the user is not on linux, and has not onboarded
     os.value = await getOS()
     // videoPlaying.value = !fully_onboarded && os.value !== 'Linux'
@@ -104,11 +103,10 @@ defineExpose({
     themeStore.advancedRendering = advanced_rendering
 
     mixpanel_init('014c7d6a336d0efaefe3aca91063748d', { debug: dev, persistence: 'localStorage' })
+    settings.telemetry = true // Disable telemetry by default
+    set(settings)
     if (telemetry) {
-      console.info(
-        '[AR • Hard Disable Patch] • TELEMETRY (DISABLED) status is ',
-        telemetry,
-      )
+      console.info('[AR • Hard Disable Patch] • TELEMETRY (DISABLED) status is ', telemetry)
       mixpanel_opt_out_tracking()
     }
     mixpanel_track('Launched', { version, dev, onboarded })
@@ -159,7 +157,7 @@ const isOnBrowse = computed(() => route.path.startsWith('/browse'))
 const loading = useLoading()
 
 const notifications = useNotifications()
-const notificationsWrapper = ref(null)
+const notificationsWrapper = ref()
 
 const error = useError()
 const errorModal = ref()
@@ -240,18 +238,18 @@ const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value
 }
 
-async function openInstance(instance) {
-  const instancePath = `/instance/${encodeURIComponent(instance.path)}/`
-  if (route.path.startsWith('/instance')) {
-    await router.replace({ path: `/library` }).then(() => {
-      setTimeout(() => {
-        router.replace({ path: instancePath }).catch(() => { })
-      }, 128)
-    })
-  } else {
-    router.push({ path: instancePath })
-  }
-}
+// async function openInstance(instance) {
+//   const instancePath = `/instance/${encodeURIComponent(instance.path)}/`
+//   if (route.path.startsWith('/instance')) {
+//     await router.replace({ path: `/library` }).then(() => {
+//       setTimeout(() => {
+//         router.replace({ path: instancePath }).catch(() => { })
+//       }, 128)
+//     })
+//   } else {
+//     router.push({ path: instancePath })
+//   }
+// }
 </script>
 
 <template>
@@ -342,24 +340,13 @@ async function openInstance(instance) {
           </suspense>
         </div>
       </div>
-      <div class="divider">
+      <!-- <div class="divider">
         <hr />
-      </div>
-      <div class="instances pages-list">
-        <Button v-for="instance in instancesByPlayed" :key="instance.id" @click="openInstance(instance)"
-          style="display: inline-flex; background-color: transparent" class="collapsed-button">
-          <Avatar class="collapsed-avatar__icon" :src="iconPathAsUrl(instance.metadata?.icon)" size="xl" />
-          <span class="collapsed-button__label">{{ instance.metadata.name }}</span>
-        </Button>
       </div>
       <div class="divider">
         <hr />
-      </div>
+      </div> -->
       <div class="settings pages-list">
-        <Button icon-only class="page-item collapsed-button" @click="openSupport">
-          <ChatIcon />
-          <span class="collapsed-button__label">{{ t('Application.Support') }}</span>
-        </Button>
         <RouterLink to="/settings" class="btn icon-only collapsed-button">
           <SettingsIcon />
           <span class="collapsed-button__label">{{ t('Application.Settings') }}</span>
@@ -369,7 +356,6 @@ async function openInstance(instance) {
           <PlusIcon />
           <span class="collapsed-button__label">{{ t('Application.CreateProfile') }}</span>
         </Button>
-        <AccountDropdown />
       </div>
     </div>
     <div class="view">
@@ -714,7 +700,7 @@ async function openInstance(instance) {
     flex-shrink: 0;
 
     padding: var(--sidebar-padding) !important;
-    border-radius: 99999px;
+    border-radius: 16px; // 99999
     box-shadow: none;
 
     white-space: nowrap;
@@ -728,8 +714,6 @@ async function openInstance(instance) {
       height: var(--sidebar-icon-size) !important;
 
       flex-shrink: 0;
-
-      border-radius: var(--radius-xs);
     }
 
     .collapsed-avatar__icon {

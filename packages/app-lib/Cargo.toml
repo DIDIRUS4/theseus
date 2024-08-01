@@ -75,3 +75,4 @@ winreg = "0.52.0"
 [features]
 tauri = ["dep:tauri"]
 cli = ["dep:indicatif"]
+

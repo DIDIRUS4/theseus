@@ -244,11 +244,19 @@
       </div>
     </div>
   </Modal>
-  <ShareModal ref="shareModal" share-title="Sharing modpack content"
-    share-text="Check out the projects I'm using in my modpack!" :open-in-new-tab="false" />
+  <ShareModal
+    ref="shareModal"
+    share-title="Sharing modpack content"
+    share-text="Check out the projects I'm using in my modpack!"
+    :open-in-new-tab="false"
+  />
   <ExportModal v-if="projects.length > 0" ref="exportModal" :instance="instance" />
-  <ModpackVersionModal v-if="instance.linked_data" ref="modpackVersionModal" :instance="instance"
-    :versions="props.versions" />
+  <ModpackVersionModal
+    v-if="instance.linked_data"
+    ref="modpackVersionModal"
+    :instance="instance"
+    :versions="props.versions"
+  />
 </template>
 <script setup>
 import {
