@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { PlusIcon, TrashIcon, LogInIcon } from '@modrinth/assets'
+import { PlusIcon, TrashIcon } from '@modrinth/assets'
 import { Avatar, Button, Card, Modal } from '@modrinth/ui'
 import { ref, computed, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 

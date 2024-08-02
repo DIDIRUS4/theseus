@@ -1,4 +1,4 @@
-use crate::api::{Result,};
+use crate::api::Result;
 use chrono::{Duration, Utc};
 use tauri::plugin::TauriPlugin;
 use tauri::{Manager, UserAttentionType};

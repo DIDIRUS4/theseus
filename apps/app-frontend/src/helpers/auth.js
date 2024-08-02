@@ -19,7 +19,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 ///  - verification_uri: the URL to go to to complete the flow
 ///  - user_code: the code to enter on the verification_uri page
 export async function login() {
-  return await invoke('plugin:auth|auth_login')
+  return await invoke('auth_login')
 }
 
 /// Retrieves the default user
