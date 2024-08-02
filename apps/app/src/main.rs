@@ -48,7 +48,7 @@ struct Payload {
 // if Tauri app is called with arguments, then those arguments will be treated as commands
 // ie: deep links or filepaths for .mrpacks
 fn main() {
-    tauri_plugin_deep_link::prepare("ModrinthApp");
+    tauri_plugin_deep_link::prepare("AstralRinth");
 
     /*
         tracing is set basd on the environment variable RUST_LOG=xxx, depending on the amount of logs to show

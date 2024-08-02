@@ -100,7 +100,7 @@ impl DiscordGuard {
         // Check if discord is disabled, and if so, clear the activity instead
         let state = State::get().await?;
         let settings = crate::state::Settings::get(&state.pool).await?;
-        if settings.discord_rpc {
+        if !settings.discord_rpc {
             Ok(self.clear_activity(true).await?)
         } else {
             Ok(self.force_set_activity(msg, reconnect_if_fail).await?)
@@ -233,7 +233,7 @@ impl DiscordGuard {
         let state = State::get().await?;
 
         let settings = crate::state::Settings::get(&state.pool).await?;
-        if settings.discord_rpc {
+        if !settings.discord_rpc {
             println!("Discord is disabled, clearing activity");
             return self.clear_activity(true).await;
         }

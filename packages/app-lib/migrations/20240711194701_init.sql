@@ -11,8 +11,8 @@ CREATE TABLE settings (
     advanced_rendering INTEGER NOT NULL DEFAULT TRUE,
     native_decorations INTEGER NOT NULL DEFAULT FALSE,
 
-    telemetry INTEGER NOT NULL DEFAULT TRUE,
-    discord_rpc INTEGER NOT NULL DEFAULT FALSE,
+    telemetry INTEGER NOT NULL DEFAULT FALSE,
+    discord_rpc INTEGER NOT NULL DEFAULT TRUE,
     developer_mode INTEGER NOT NULL DEFAULT FALSE,
 
     onboarded INTEGER NOT NULL DEFAULT FALSE,

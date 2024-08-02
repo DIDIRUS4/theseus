@@ -10,7 +10,7 @@ pub use crate::{
 pub async fn get() -> crate::Result<Settings> {
     let state = State::get().await?;
     let mut settings = Settings::get(&state.pool).await?;
-    settings.telemetry = true;
+    settings.telemetry = false;
     Ok(settings)
 }
 

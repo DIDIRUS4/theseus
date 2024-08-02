@@ -11,6 +11,9 @@ import { PlusIcon } from '@modrinth/assets'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
 import { NewInstanceImage } from '@/assets/icons'
 
+import { i18n } from '@/main.js';
+const t = i18n.global.t;
+
 const route = useRoute()
 const breadcrumbs = useBreadcrumbs()
 
@@ -32,8 +35,6 @@ const unlistenProfile = await profile_listener(async () => {
 onUnmounted(() => {
   unlistenProfile()
 })
-
-await unlistenProfile()
 </script>
 
 <template>

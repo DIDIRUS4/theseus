@@ -91,6 +91,7 @@ defineExpose({
       advanced_rendering,
       onboarded,
     } = await get()
+    languageStore.setLanguageState(language)
     const settings = await get()
     // video should play if the user is not on linux, and has not onboarded
     os.value = await getOS()
@@ -103,14 +104,13 @@ defineExpose({
     if (os.value !== 'MacOS') appWindow.setDecorations(native_decorations)
 
     themeStore.setThemeState(theme)
-    languageStore.setLanguageState(language)
     themeStore.collapsedNavigation = collapsed_navigation
     themeStore.advancedRendering = advanced_rendering
 
     mixpanel_init('014c7d6a336d0efaefe3aca91063748d', { debug: dev, persistence: 'localStorage' })
-    settings.telemetry = true // Disable telemetry by default
+    settings.telemetry = false // Disable telemetry by default
     set(settings)
-    if (telemetry) {
+    if (!telemetry) {
       console.info('[AR • Hard Disable Patch] • TELEMETRY (DISABLED) status is ', telemetry)
       mixpanel_opt_out_tracking()
     }

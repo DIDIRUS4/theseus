@@ -1,5 +1,7 @@
-import { defineStore } from 'pinia';
-import { i18n } from '@/main.js';
+import { defineStore } from 'pinia'
+import { i18n } from '@/main.js'
+
+const rewriteString = (string) => string.toLowerCase()
 
 export const useLanguage = defineStore('languageStore', {
   state: () => ({
@@ -8,32 +10,26 @@ export const useLanguage = defineStore('languageStore', {
   }),
   actions: {
     setLanguageState(newLanguage) {
-
-      if (this.languageOptions.includes(rewriteString(newLanguage))) {
-        this.selectedLanguage = rewriteString(newLanguage);
-      } else {
-        console.warn('Selected language is not present. Check languageOptions. ' + this.selectedLanguage);
+      if (!this.languageOptions.includes(rewriteString(newLanguage))) {
+        throw new Error('Selected language is not present. Check languageOptions.')
       }
 
-      this.setLanguageClass();
+      this.selectedLanguage = rewriteString(newLanguage)
+      this.setLanguageClass()
     },
     setLanguageClass() {
-      i18n.global.locale = rewriteString(this.selectedLanguage);
+      i18n.global.locale = this.selectedLanguage
     },
     setupWatcher() {
       this.$watch(
         () => i18n.global.locale,
         (newLanguage) => {
-          console.log('Language changed globally and rewritted in settings:', rewriteString(newLanguage));
-        }
-      );
+          console.log('Language changed globally and rewritted in settings:', newLanguage)
+        },
+      )
     },
   },
   onInit() {
-    this.setupWatcher();
+    this.setupWatcher()
   },
-});
-
-function rewriteString(string) {
-  return string.toLowerCase()
-}
+})

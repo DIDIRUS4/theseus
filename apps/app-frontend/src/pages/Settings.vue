@@ -61,7 +61,7 @@ watch(
 
     const setSettings = JSON.parse(JSON.stringify(newSettings))
 
-    if (setSettings.telemetry) {
+    if (!setSettings.telemetry) {
       mixpanel_opt_out_tracking()
     } else {
       mixpanel_opt_in_tracking()
@@ -363,7 +363,7 @@ await getBranches()
           id="opt-out-analytics"
           :model-value="settings.telemetry"
           :checked="settings.telemetry"
-          :disabled="settings.telemetry"
+          :disabled="!settings.telemetry"
           @update:model-value="
             (e) => {
               settings.telemetry = e
