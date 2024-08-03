@@ -7,11 +7,11 @@
             <dict>
                 <key>CFBundleURLName</key>
                 <!-- Obviously needs to be replaced with your app's bundle identifier -->
-                <string>com.modrinth.theseus</string>
+                <string>AstralRinth</string>
                 <key>CFBundleURLSchemes</key>
                 <array>
                     <!-- register the myapp:// and myscheme:// schemes -->
-                    <string>modrinth</string>
+                    <string>astralrinth</string>
                 </array>
             </dict>
         </array>
@@ -20,14 +20,14 @@
     	<array>
     		<dict>
     			<key>CFBundleTypeName</key>
-    			<string>Modrinth type</string>
+    			<string>AstralRinth type</string>
     			<key>CFBundleTypeRole</key>
     			<string>Editor</string>
     			<key>LSHandlerRank</key>
     			<string>Owner</string>
     			<key>LSItemContentTypes</key>
     			<array>
-    				<string>com.modrinth.theseus-type</string>
+    				<string>AstralRinthApp-type</string>
     			</array>
     			<key>NSDocumentClass</key>
     			<string>NSDocument</string>
@@ -45,7 +45,7 @@
     			<key>UTTypeIcons</key>
     			<dict/>
     			<key>UTTypeIdentifier</key>
-    			<string>com.modrinth.theseus-type</string>
+    			<string>ModrinthApp-type</string>
     			<key>UTTypeTagSpecification</key>
     			<dict>
     				<key>public.filename-extension</key>

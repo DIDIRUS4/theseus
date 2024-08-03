@@ -11,10 +11,8 @@ import {
 import { Card, Slider, DropdownSelect, Toggle, Modal, Button } from '@modrinth/ui'
 import { handleError, useTheming } from '@/store/state'
 import { is_dir_writeable, change_config_dir, get, set } from '@/helpers/settings'
-import { get_max_memory } from '@/helpers/jre'
-
-import { useModrinthAuth } from '@/store/mr_auth.js'
-
+import { get_java_versions, get_max_memory, set_java_version } from '@/helpers/jre'
+import { get as getCreds, logout } from '@/helpers/mr_auth.js'
 import JavaSelector from '@/components/ui/JavaSelector.vue'
 import ModrinthLoginScreen from '@/components/ui/tutorial/ModrinthLoginScreen.vue'
 import { mixpanel_opt_out_tracking, mixpanel_opt_in_tracking } from '@/helpers/mixpanel'
@@ -32,18 +30,17 @@ import {
   latestBetaCommitTruncatedSha,
 } from '@/helpers/update.js'
 const t = i18n.global.t
-import { storeToRefs } from 'pinia'
+import { get_user } from '@/helpers/cache.js'
 
 const pageOptions = ['Home', 'Library']
-
 const themeStore = useTheming()
 const languageStore = useLanguage()
 
 const accessSettings = async () => {
   const settings = await get()
 
-  settings.javaArgs = settings.custom_java_args.join(' ')
-  settings.envArgs = settings.custom_env_args.map((x) => x.join('=')).join(' ')
+  settings.launchArgs = settings.extra_launch_args.join(' ')
+  settings.envVars = settings.custom_env_vars.map((x) => x.join('=')).join(' ')
 
   return settings
 }
@@ -51,7 +48,8 @@ const accessSettings = async () => {
 const fetchSettings = await accessSettings().catch(handleError)
 
 const settings = ref(fetchSettings)
-const settingsDir = ref(settings.value.loaded_config_dir)
+// const settingsDir = ref(settings.value.loaded_config_dir)
+
 const maxMemory = ref(Math.floor((await get_max_memory().catch(handleError)) / 1024))
 
 watch(
@@ -63,26 +61,14 @@ watch(
 
     const setSettings = JSON.parse(JSON.stringify(newSettings))
 
-    if (setSettings.opt_out_analytics) {
+    if (!setSettings.telemetry) {
       mixpanel_opt_out_tracking()
     } else {
       mixpanel_opt_in_tracking()
     }
 
-    for (const [key, value] of Object.entries(setSettings.java_globals)) {
-      if (value?.path === '') {
-        value.path = undefined
-      }
-
-      if (value?.path) {
-        value.path = value.path.replace('java.exe', 'javaw.exe')
-      }
-
-      console.log(`${key}: ${value}`)
-    }
-
-    setSettings.custom_java_args = setSettings.javaArgs.trim().split(/\s+/).filter(Boolean)
-    setSettings.custom_env_args = setSettings.envArgs
+    setSettings.extra_launch_args = setSettings.launchArgs.trim().split(/\s+/).filter(Boolean)
+    setSettings.custom_env_vars = setSettings.envVars
       .trim()
       .split(/\s+/)
       .filter(Boolean)
@@ -98,18 +84,49 @@ watch(
       setSettings.hooks.post_exit = null
     }
 
+    if (!setSettings.custom_dir) {
+      setSettings.custom_dir = null
+    }
+
     await set(setSettings)
   },
   { deep: true },
 )
 
-const mrAuth = useModrinthAuth()
-const { auth } = storeToRefs(mrAuth)
+const javaVersions = ref(await get_java_versions().catch(handleError))
+async function updateJavaVersion(version) {
+  if (version?.path === '') {
+    version.path = undefined
+  }
+
+  if (version?.path) {
+    version.path = version.path.replace('java.exe', 'javaw.exe')
+  }
+
+  await set_java_version(version).catch(handleError)
+}
+
+async function fetchCredentials() {
+  const creds = await getCreds().catch(handleError)
+  console.log(creds)
+  if (creds && creds.user_id) {
+    creds.user = await get_user(creds.user_id).catch(handleError)
+  }
+  credentials.value = creds
+}
+
+const credentials = ref()
+await fetchCredentials()
+
 const loginScreenModal = ref()
 
+async function logOut() {
+  await logout().catch(handleError)
+  await fetchCredentials()
+}
+
 async function signInAfter() {
-  loginScreenModal.value.hide()
-  await mrAuth.get()
+  await fetchCredentials()
 }
 
 async function findLauncherDir() {
@@ -119,25 +136,10 @@ async function findLauncherDir() {
     title: t('Settings.SelectANewAppDirectory'),
   })
 
-  const writeable = await is_dir_writeable(newDir)
-
-  if (!writeable) {
-    handleError('The selected directory does not have proper permissions for write access.')
-    return
-  }
-
   if (newDir) {
-    settingsDir.value = newDir
-    await refreshDir()
+    settings.value.custom_dir = newDir
   }
 }
-
-async function refreshDir() {
-  await change_config_dir(settingsDir.value)
-  settings.value = await accessSettings().catch(handleError)
-  settingsDir.value = settings.value.loaded_config_dir
-}
-
 const confirmUpdate = ref(null)
 
 await getRemote(false, false)
@@ -152,22 +154,16 @@ await getBranches()
           <span class="label__title size-card-header">{{ t('Settings.GeneralSettings') }}</span>
         </h3>
       </div>
-      <Modal
-        ref="loginScreenModal"
-        class="login-screen-modal"
-        :noblur="!themeStore.advancedRendering"
-      >
-        <ModrinthLoginScreen :modal="true" :prev-page="signInAfter" :next-page="signInAfter" />
-      </Modal>
+      <ModrinthLoginScreen ref="loginScreenModal" :callback="signInAfter" />
       <div class="adjacent-input">
         <label for="theme">
           <span class="label__title">{{ t('Settings.ManageAccount') }}</span>
-          <span v-if="auth" class="label__description">
-            {{ t('Settings.YouAreCurrentlyLoggedInAs') }} {{ auth?.user.username }}.
+          <span v-if="credentials" class="label__description">
+            {{ t('Settings.ManageAccount') }} {{ credentials.user.username }}.
           </span>
           <span v-else> {{ t('Settings.SignInToYourModrinthAccount') }} </span>
         </label>
-        <button v-if="auth" class="btn" @click="mrAuth.logout()">
+        <button v-if="credentials" class="btn" @click="logOut">
           <LogOutIcon />
           {{ t('Settings.SignOut') }}
         </button>
@@ -185,15 +181,11 @@ await getBranches()
       <div class="app-directory">
         <div class="iconified-input">
           <BoxIcon />
-          <input id="appDir" v-model="settingsDir" type="text" class="input" />
+          <input id="appDir" v-model="settings.custom_dir" type="text" class="input" />
           <Button class="r-btn" @click="findLauncherDir">
             <FolderSearchIcon />
           </Button>
         </div>
-        <Button large @click="refreshDir">
-          <UpdatedIcon />
-          {{ t('Settings.Refresh') }}
-        </Button>
       </div>
     </Card>
     <Card>
@@ -240,7 +232,7 @@ await getBranches()
           @change="
             (e) => {
               languageStore.setLanguageState(e.option.toLowerCase())
-              settings.language = languageStore.selectedLanguage
+              settings.language = e.option
             }
           "
         />
@@ -272,11 +264,11 @@ await getBranches()
         </label>
         <Toggle
           id="minimize-launcher"
-          :model-value="settings.hide_on_process"
-          :checked="settings.hide_on_process"
+          :model-value="settings.hide_on_process_start"
+          :checked="settings.hide_on_process_start"
           @update:model-value="
             (e) => {
-              settings.hide_on_process = e
+              settings.hide_on_process_start = e
             }
           "
         />
@@ -369,12 +361,12 @@ await getBranches()
         </label>
         <Toggle
           id="opt-out-analytics"
-          :disabled="settings.opt_out_analytics"
-          :model-value="settings.opt_out_analytics"
-          :checked="settings.opt_out_analytics"
+          :model-value="settings.telemetry"
+          :checked="settings.telemetry"
+          :disabled="!settings.telemetry"
           @update:model-value="
             (e) => {
-              settings.opt_out_analytics = e
+              settings.telemetry = e
             }
           "
         />
@@ -388,8 +380,13 @@ await getBranches()
         </label>
         <Toggle
           id="disable-discord-rpc"
-          v-model="settings.disable_discord_rpc"
-          :checked="settings.disable_discord_rpc"
+          v-model="settings.discord_rpc"
+          :checked="settings.discord_rpc"
+          @update:model-value="
+            (e) => {
+              settings.discord_rpc = e
+            }
+          "
         />
       </div>
     </Card>
@@ -399,25 +396,24 @@ await getBranches()
           <span class="label__title size-card-header">{{ t('Settings.JavaSet') }}</span>
         </h3>
       </div>
-      <label for="java-21">
-        <span class="label__title">{{ t('Settings.Java21Location') }}</span>
-      </label>
-      <JavaSelector id="java-17" v-model="settings.java_globals.JAVA_21" :version="21" />
-      <label for="java-17">
-        <span class="label__title">{{ t('Settings.Java17Location') }}</span>
-      </label>
-      <JavaSelector id="java-17" v-model="settings.java_globals.JAVA_17" :version="17" />
-      <label for="java-8">
-        <span class="label__title">{{ t('Settings.Java8Location') }}</span>
-      </label>
-      <JavaSelector id="java-8" v-model="settings.java_globals.JAVA_8" :version="8" />
+      <template v-for="version in [21, 17, 8]">
+        <label :for="'java-' + version">
+          <span class="label__title">Java {{ version }}</span>
+        </label>
+        <JavaSelector
+          :id="'java-selector-' + version"
+          v-model="javaVersions[version]"
+          :version="version"
+          @update:model-value="updateJavaVersion"
+        />
+      </template>
       <hr class="card-divider" />
       <label for="java-args">
         <span class="label__title">{{ t('Settings.JavaArgs') }}</span>
       </label>
       <input
         id="java-args"
-        v-model="settings.javaArgs"
+        v-model="settings.launchArgs"
         autocomplete="off"
         type="text"
         class="installation-input"
@@ -428,7 +424,7 @@ await getBranches()
       </label>
       <input
         id="env-vars"
-        v-model="settings.envArgs"
+        v-model="settings.envVars"
         autocomplete="off"
         type="text"
         class="installation-input"
@@ -567,7 +563,7 @@ await getBranches()
         <label>
           <span class="label__title inl">AstralRinth <PirateShip /> Version </span>
           <span class="label__description"
-            >Modrinth/Theseus version: v{{ version }}. Patch version: v{{ patch_version }}
+            >Modrinth/Code version: v{{ version }}. Patch version: v{{ patch_version }}
           </span>
 
           <span class="label__description"
@@ -781,22 +777,6 @@ a.github:active {
 
 .language-dropdown {
   text-transform: capitalize;
-}
-
-.card-divider {
-  margin: 1rem 0;
-}
-
-:deep {
-  .login-screen-modal {
-    .modal-container .modal-body {
-      width: auto;
-
-      .content {
-        background: none;
-      }
-    }
-  }
 }
 
 .app-directory {

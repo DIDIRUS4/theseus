@@ -9,22 +9,22 @@
       v-if="currentLoadingBars.length > 0"
       ref="infoButton"
       icon-only
-      class="download icon-button"
+      class="download"
       @click="toggleCard()"
     >
       <DownloadIcon />
     </Button>
     <div v-if="offline" class="status">
       <span class="circle stopped" />
-      <div class="running-text clickable" @click="refreshInternet()">
+      <div class="running-text">
         <span> {{ t('RunningAppBar.Offline') }} </span>
       </div>
     </div>
-    <div v-if="selectedProfile" class="status">
+    <div v-if="selectedProcess" class="status">
       <span class="circle running" />
       <div ref="profileButton" class="running-text">
-        <router-link :to="`/instance/${encodeURIComponent(selectedProfile.path)}`">
-          {{ selectedProfile.metadata.name }}
+        <router-link :to="`/instance/${encodeURIComponent(selectedProcess.profile.path)}`">
+          {{ selectedProcess.profile.name }}
         </router-link>
         <div
           v-if="currentProcesses.length > 1"
@@ -38,8 +38,8 @@
       <Button
         v-tooltip="t('RunningAppBar.StopInstance')"
         icon-only
-        class="stop icon-button"
-        @click="stop()"
+        class="icon-button stop"
+        @click="stop(selectedProcess)"
       >
         <StopCircleIcon />
       </Button>
@@ -124,25 +124,25 @@
       class="profile-card"
     >
       <Button
-        v-for="profile in currentProcesses"
-        :key="profile.id"
+        v-for="process in currentProcesses"
+        :key="process.pid"
         class="profile-button"
-        @click="selectProfile(profile)"
+        @click="selectedProcess(process)"
       >
-        <div class="text"><span class="circle running" /> {{ profile.metadata.name }}</div>
+        <div class="text"><span class="circle running" /> {{ process.profile.name }}</div>
         <Button
           v-tooltip="t('RunningAppBar.StopInstance')"
           icon-only
-          class="stop icon-button"
-          @click.stop="stop(profile.path)"
+          class="icon-button stop"
+          @click.stop="stop(process)"
         >
           <StopCircleIcon />
         </Button>
         <Button
           v-tooltip="t('RunningAppBar.Logs')"
           icon-only
-          class="utility icon-button"
-          @click.stop="goToTerminal(profile.path)"
+          class="icon-button"
+          @click.stop="goToTerminal(process.profile.path)"
         >
           <TerminalSquareIcon />
         </Button>
@@ -156,24 +156,19 @@ import { DownloadIcon, StopCircleIcon, TerminalSquareIcon, DropdownIcon } from '
 import { version, patch_version } from '../../../package.json'
 import { Button, Card, Modal } from '@modrinth/ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import {
-  get_all_running_profiles as getRunningProfiles,
-  get_uuids_by_profile_path as getProfileProcesses,
-  kill_by_uuid as killProfile,
-} from '@/helpers/process'
-import { loading_listener, offline_listener, process_listener } from '@/helpers/events'
+import { get_all as getRunningProcesses, kill as killProcess } from '@/helpers/process'
+import { loading_listener, process_listener } from '@/helpers/events'
 import { useRouter } from 'vue-router'
 import { progress_bars_list } from '@/helpers/state.js'
-import { isOffline, refreshOffline } from '@/helpers/utils.js'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { handleError } from '@/store/notifications.js'
 import { mixpanel_track } from '@/helpers/mixpanel'
 import { ChatIcon } from '@/assets/icons'
-import { buildInstalling, getRemote, updateAvailable } from '@/helpers/update.js'
+import { get_many } from '@/helpers/profile.js'
 import { i18n } from '@/main.js'
+import { buildInstalling, getRemote, updateAvailable } from '@/helpers/update.js'
 
 const t = i18n.global.t
-
 const router = useRouter()
 const card = ref(null)
 const profiles = ref(null)
@@ -183,38 +178,44 @@ const showCard = ref(false)
 
 const showProfiles = ref(false)
 
-const currentProcesses = ref(await getRunningProfiles().catch(handleError))
-const selectedProfile = ref(currentProcesses.value[0])
+const currentProcesses = ref([])
+const selectedProcess = ref()
 
-const offline = ref(await isOffline().catch(handleError))
-const refreshInternet = async () => {
-  offline.value = await refreshOffline().catch(handleError)
+const refresh = async () => {
+  const processes = await getRunningProcesses().catch(handleError)
+  const profiles = await get_many(processes.map((x) => x.profile_path)).catch(handleError)
+
+  currentProcesses.value = processes.map((x) => ({
+    profile: profiles.find((prof) => x.profile_path === prof.path),
+    ...x,
+  }))
+  if (!selectedProcess.value || !currentProcesses.value.includes(selectedProcess.value)) {
+    selectedProcess.value = currentProcesses.value[0]
+  }
 }
+
+await refresh()
+
+const offline = ref(!navigator.onLine)
+window.addEventListener('offline', () => {
+  offline.value = true
+})
+window.addEventListener('online', () => {
+  offline.value = false
+})
 
 const unlistenProcess = await process_listener(async () => {
   await refresh()
 })
 
-const unlistenRefresh = await offline_listener(async (b) => {
-  offline.value = b
-  await refresh()
-})
-
-const refresh = async () => {
-  currentProcesses.value = await getRunningProfiles().catch(handleError)
-  if (!currentProcesses.value.includes(selectedProfile.value)) {
-    selectedProfile.value = currentProcesses.value[0]
-  }
-}
-
-const stop = async (path) => {
+const stop = async (process) => {
   try {
-    const processes = await getProfileProcesses(path ?? selectedProfile.value.path)
-    await killProfile(processes[0])
+    console.log(process.pid)
+    await killProcess(process.pid).catch(handleError)
 
     mixpanel_track('InstanceStop', {
-      loader: currentProcesses.value[0].metadata.loader,
-      game_version: currentProcesses.value[0].metadata.game_version,
+      loader: process.profile.loader,
+      game_version: process.profile.game_version,
       source: 'AppBar',
     })
   } catch (e) {
@@ -224,7 +225,7 @@ const stop = async (path) => {
 }
 
 const goToTerminal = (path) => {
-  router.push(`/instance/${encodeURIComponent(path ?? selectedProfile.value.path)}/logs`)
+  router.push(`/instance/${encodeURIComponent(path ?? selectedProcess.value.profile.path)}/logs`)
 }
 
 const currentLoadingBars = ref([])
@@ -236,8 +237,8 @@ const refreshInfo = async () => {
       if (x.bar_type.type === 'java_download') {
         x.title = 'Downloading Java' + ' ' + x.bar_type.version
       }
-      if (x.bar_type.profile_name) {
-        x.title = x.bar_type.profile_name
+      if (x.bar_type.profile_path) {
+        x.title = x.bar_type.profile_path
       }
       if (x.bar_type.pack_name) {
         x.title = x.bar_type.pack_name
@@ -269,8 +270,8 @@ const unlistenLoading = await loading_listener(async () => {
   await refreshInfo()
 })
 
-const selectProfile = (profile) => {
-  selectedProfile.value = profile
+const selectProcess = (process) => {
+  selectedProcess.value = process
   showProfiles.value = false
 }
 
@@ -321,7 +322,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleClickOutsideProfile)
   unlistenProcess()
   unlistenLoading()
-  unlistenRefresh()
 })
 
 const confirmUpdate = ref(null)
@@ -395,7 +395,7 @@ await getRemote(true, false)
   color: #3e8cde;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-button-bg);
-  padding: var(--gap-sm) var(--gap-lg);
+  // padding: var(--gap-sm) var(--gap-lg);
   background-color: rgba(0, 0, 0, 0);
   text-decoration: none;
   text-shadow:

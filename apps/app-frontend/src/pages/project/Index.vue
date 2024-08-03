@@ -3,27 +3,15 @@
     <div v-if="data" class="project-sidebar">
       <Card v-if="instance" class="small-instance">
         <router-link class="instance" :to="`/instance/${encodeURIComponent(instance.path)}`">
-          <Avatar
-            :src="
-              !instance.metadata.icon ||
-              (instance.metadata.icon && instance.metadata.icon.startsWith('http'))
-                ? instance.metadata.icon
-                : convertFileSrc(instance.metadata?.icon)
-            "
-            :alt="instance.metadata.name"
-            size="sm"
-          />
+          <Avatar :src="instance.icon_path ? convertFileSrc(instance.icon_path) : null" :alt="instance.name"
+            size="sm" />
           <div class="small-instance_info">
             <span class="title">{{
-                instance.metadata.name.length > 20
-                  ? instance.metadata.name.substring(0, 20) + '...'
-                  : instance.metadata.name
+              instance.name.length > 20 ? instance.name.substring(0, 20) + '...' : instance.name
               }}</span>
             <span>
-              {{
-                instance.metadata.loader.charAt(0).toUpperCase() + instance.metadata.loader.slice(1)
-              }}
-              {{ instance.metadata.game_version }}
+              {{ instance.loader.charAt(0).toUpperCase() + instance.loader.slice(1) }}
+              {{ instance.game_version }}
             </span>
           </div>
         </router-link>
@@ -34,38 +22,22 @@
           <h2 class="name">{{ data.title }}</h2>
           {{ data.description }}
         </div>
-        <Categories
-          class="tags"
-          :categories="
-            categories.filter(
-              (cat) => data.categories.includes(cat.name) && cat.project_type === 'mod',
-            )
-          "
-          type="ignored"
-        >
-          <EnvironmentIndicator
-            :client-side="data.client_side"
-            :server-side="data.server_side"
-            :type="data.project_type"
-          />
+        <Categories class="tags" :categories="categories.filter(
+          (cat) => data.categories.includes(cat.name) && cat.project_type === 'mod',
+        )
+          " type="ignored">
+          <EnvironmentIndicator :client-side="data.client_side" :server-side="data.server_side"
+            :type="data.project_type" />
         </Categories>
         <hr class="card-divider" />
         <div class="button-group">
-          <Button
-            color="primary"
-            class="instance-button"
-            :disabled="installed === true || installing === true"
-            @click="install(null)"
-          >
+          <Button color="primary" class="instance-button" :disabled="installed === true || installing === true"
+            @click="install(null)">
             <DownloadIcon v-if="!installed && !installing" />
             <CheckIcon v-else-if="installed" />
             {{ installing ? t('Index.Installing') : installed ? t('Index.Installed') : t('Index.Install') }}
           </Button>
-          <a
-            :href="`https://modrinth.com/${data.project_type}/${data.slug}`"
-            rel="external"
-            class="btn"
-          >
+          <a :href="`https://modrinth.com/${data.project_type}/${data.slug}`" rel="external" class="btn">
             <ExternalIcon />
             {{ t('Index.Site') }}
           </a>
@@ -76,29 +48,23 @@
             <DownloadIcon aria-hidden="true" />
             <p>
               <strong>{{ formatNumber(data.downloads) }}</strong>
-              <span class="stat-label"> download<span
-                v-if="data.downloads !== '1'">s</span></span>
+              <span class="stat-label"> download<span v-if="data.downloads !== '1'">s</span></span>
             </p>
           </div>
           <div class="stat">
             <HeartIcon aria-hidden="true" />
             <p>
               <strong>{{ formatNumber(data.followers) }}</strong>
-              <span class="stat-label"> follower<span
-                v-if="data.followers !== '1'">s</span></span>
+              <span class="stat-label"> follower<span v-if="data.followers !== '1'">s</span></span>
             </p>
           </div>
           <div class="stat date">
             <CalendarIcon aria-hidden="true" />
-            <span
-            ><span class="date-label">Created </span> {{ dayjs(data.published).fromNow() }}</span
-            >
+            <span><span class="date-label">Created </span> {{ dayjs(data.published).fromNow() }}</span>
           </div>
           <div class="stat date">
             <UpdatedIcon aria-hidden="true" />
-            <span
-            ><span class="date-label">Updated </span> {{ dayjs(data.updated).fromNow() }}</span
-            >
+            <span><span class="date-label">Updated </span> {{ dayjs(data.updated).fromNow() }}</span>
           </div>
         </div>
         <hr class="card-divider" />
@@ -114,48 +80,24 @@
         </div>
         <hr class="card-divider" />
         <div class="links">
-          <a
-            v-if="data.issues_url"
-            :href="data.issues_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.issues_url" :href="data.issues_url" class="title" rel="noopener nofollow ugc external">
             <IssuesIcon aria-hidden="true" />
             <span>{{ t('Index.Issues') }}</span>
           </a>
-          <a
-            v-if="data.source_url"
-            :href="data.source_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.source_url" :href="data.source_url" class="title" rel="noopener nofollow ugc external">
             <CodeIcon aria-hidden="true" />
             <span>{{ t('Index.Source') }}</span>
           </a>
-          <a
-            v-if="data.wiki_url"
-            :href="data.wiki_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.wiki_url" :href="data.wiki_url" class="title" rel="noopener nofollow ugc external">
             <WikiIcon aria-hidden="true" />
             <span>{{ t('Index.Wiki') }}</span>
           </a>
-          <a
-            v-if="data.discord_url"
-            :href="data.discord_url"
-            class="title"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-if="data.discord_url" :href="data.discord_url" class="title" rel="noopener nofollow ugc external">
             <DiscordIcon aria-hidden="true" />
             <span>{{ t('Index.Discord') }}</span>
           </a>
-          <a
-            v-for="(donation, index) in data.donation_urls"
-            :key="index"
-            :href="donation.url"
-            rel="noopener nofollow ugc external"
-          >
+          <a v-for="(donation, index) in data.donation_urls" :key="index" :href="donation.url"
+            rel="noopener nofollow ugc external">
             <BuyMeACoffeeIcon v-if="donation.id === 'bmac'" aria-hidden="true" />
             <PatreonIcon v-else-if="donation.id === 'patreon'" aria-hidden="true" />
             <KoFiIcon v-else-if="donation.id === 'ko-fi'" aria-hidden="true" />
@@ -176,53 +118,35 @@
     <div v-if="data" class="content-container">
       <!--      <Promotion :external="false" query-param="?r=launcher" />-->
       <Card class="tabs">
-        <NavRow
-          v-if="data.gallery.length > 0"
-          :links="[
-            {
-              label: t('Index.Description'),
-              href: `/project/${$route.params.id}/`,
-            },
-            {
-              label: t('Index.Versions'),
-              href: `/project/${$route.params.id}/versions`,
-            },
-            {
-              label: t('Index.Gallery'),
-              href: `/project/${$route.params.id}/gallery`,
-            },
-          ]"
-        />
-        <NavRow
-          v-else
-          :links="[
-            {
-              label: t('Index.Description'),
-              href: `/project/${$route.params.id}/`,
-            },
-            {
-              label: t('Index.Versions'),
-              href: `/project/${$route.params.id}/versions`,
-            },
-          ]"
-        />
+        <NavRow v-if="data.gallery.length > 0" :links="[
+          {
+            label: t('Index.Description'),
+            href: `/project/${$route.params.id}/`,
+          },
+          {
+            label: t('Index.Versions'),
+            href: `/project/${$route.params.id}/versions`,
+          },
+          {
+            label: t('Index.Gallery'),
+            href: `/project/${$route.params.id}/gallery`,
+          },
+        ]" />
+        <NavRow v-else :links="[
+          {
+            label: t('Index.Description'),
+            href: `/project/${$route.params.id}/`,
+          },
+          {
+            label: t('Index.Versions'),
+            href: `/project/${$route.params.id}/versions`,
+          },
+        ]" />
       </Card>
-      <RouterView
-        :project="data"
-        :versions="versions"
-        :members="members"
-        :dependencies="dependencies"
-        :instance="instance"
-        :install="install"
-        :installed="installed"
-        :installing="installing"
-        :installed-version="installedVersion"
-      />
+      <RouterView :project="data" :versions="versions" :members="members" :instance="instance" :install="install"
+        :installed="installed" :installing="installing" :installed-version="installedVersion" />
     </div>
   </div>
-  <InstallConfirmModal ref="confirmModal" />
-  <ModInstallModal ref="modInstallModal" />
-  <IncompatibilityWarningModal ref="incompatibilityWarning" />
   <ContextMenu ref="options" @option-clicked="handleOptionsClick">
     <template #install>
       <DownloadIcon />
@@ -273,83 +197,65 @@ import {
   OpenCollectiveIcon,
 } from '@/assets/external'
 import { get_categories } from '@/helpers/tags'
-import { install as packInstall } from '@/helpers/pack'
-import {
-  add_project_from_version as installMod,
-  check_installed,
-  get as getInstance,
-  list,
-  remove_project
-} from '@/helpers/profile'
+import { get as getInstance, get_projects as getInstanceProjects } from '@/helpers/profile'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useRoute } from 'vue-router'
 import { ref, shallowRef, watch } from 'vue'
-import { installVersionDependencies, isOffline } from '@/helpers/utils'
-import InstallConfirmModal from '@/components/ui/InstallConfirmModal.vue'
-import ModInstallModal from '@/components/ui/ModInstallModal.vue'
 import { useBreadcrumbs } from '@/store/breadcrumbs'
-import IncompatibilityWarningModal from '@/components/ui/IncompatibilityWarningModal.vue'
-import { useFetch } from '@/helpers/fetch.js'
 import { handleError } from '@/store/notifications.js'
 import { convertFileSrc } from '@tauri-apps/api/tauri'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
-import { mixpanel_track } from '@/helpers/mixpanel'
-import { i18n } from '@/main.js'
+import { install as installVersion } from '@/store/install.js'
+import { get_project, get_project_many, get_team, get_version_many } from '@/helpers/cache.js'
 
+dayjs.extend(relativeTime)
+
+import { i18n } from '@/main.js'
 const t = i18n.global.t
 const route = useRoute()
 const breadcrumbs = useBreadcrumbs()
-
-const confirmModal = ref(null)
-const modInstallModal = ref(null)
-const incompatibilityWarning = ref(null)
 
 const options = ref(null)
 const installing = ref(false)
 const data = shallowRef(null)
 const versions = shallowRef([])
 const members = shallowRef([])
-const dependencies = shallowRef([])
 const categories = shallowRef([])
 const instance = ref(null)
+const instanceProjects = ref(null)
 
 const installed = ref(false)
 const installedVersion = ref(null)
 
-const offline = ref(await isOffline())
-
 async function fetchProjectData() {
-  ;[
-    data.value,
-    versions.value,
-    members.value,
-    dependencies.value,
-    categories.value,
-    instance.value
-  ] = await Promise.all([
-    useFetch(`https://api.modrinth.com/v2/project/${route.params.id}`, 'project'),
-    useFetch(`https://api.modrinth.com/v2/project/${route.params.id}/version`, 'project'),
-    useFetch(`https://api.modrinth.com/v2/project/${route.params.id}/members`, 'project'),
-    useFetch(`https://api.modrinth.com/v2/project/${route.params.id}/dependencies`, 'project'),
-    get_categories().catch(handleError),
-    route.query.i ? getInstance(route.query.i, false).catch(handleError) : Promise.resolve()
-  ])
+  const project = await get_project(route.params.id).catch(handleError)
 
-  installed.value =
-    instance.value?.path &&
-    (await check_installed(instance.value.path, data.value.id).catch(handleError))
+  data.value = project
+    ;[versions.value, members.value, categories.value, instance.value, instanceProjects.value] =
+      await Promise.all([
+        get_version_many(project.versions).catch(handleError),
+        get_team(project.team).catch(handleError),
+        get_categories().catch(handleError),
+        route.query.i ? getInstance(route.query.i).catch(handleError) : Promise.resolve(),
+        route.query.i ? getInstanceProjects(route.query.i).catch(handleError) : Promise.resolve(),
+      ])
 
+  versions.value = versions.value.sort((a, b) => dayjs(b.date_published) - dayjs(a.date_published))
+
+  if (instanceProjects.value) {
+    const installedFile = Object.values(instanceProjects.value).find(
+      (x) => x.metadata && x.metadata.project_id === data.value.id,
+    )
+    if (installedFile) {
+      installed.value = true
+      installedVersion.value = installedFile.metadata.version_id
+    }
+  }
   breadcrumbs.setName('Project', data.value.title)
-
-  installedVersion.value = instance.value
-    ? Object.values(instance.value.projects).find(
-      (p) => p?.metadata?.version?.project_id === data.value.id
-    )?.metadata?.version?.id
-    : null
 }
 
-if (!offline.value) await fetchProjectData()
+await fetchProjectData()
 
 watch(
   () => route.params.id,
@@ -360,162 +266,22 @@ watch(
   },
 )
 
-dayjs.extend(relativeTime)
-
-const markInstalled = () => {
-  installed.value = true
-}
-
 async function install(version) {
   installing.value = true
-  let queuedVersionData
-  if (instance.value) {
-    instance.value = await getInstance(instance.value.path, false).catch(handleError)
-  }
-
-  if (installed.value) {
-    const old_project = Object.entries(instance.value.projects)
-      .map(([key, value]) => ({
-        key,
-        value
-      }))
-      .find((p) => p.value.metadata?.version?.project_id === data.value.id)
-    if (!old_project) {
-      // Switching too fast, old project is not recognized as a Modrinth project yet
+  await installVersion(
+    data.value.id,
+    version,
+    instance.value ? instance.value.path : null,
+    'ProjectPage',
+    (version) => {
       installing.value = false
-      return
-    }
 
-    await remove_project(instance.value.path, old_project.key)
-  }
-
-  if (version) {
-    queuedVersionData = versions.value.find((v) => v.id === version)
-  } else {
-    if (data.value.project_type === 'modpack' || !instance.value) {
-      queuedVersionData = versions.value[0]
-    } else {
-      queuedVersionData = versions.value.find((v) =>
-        v.game_versions.includes(data.value.game_versions[0]),
-      )
-    }
-  }
-
-  if (data.value.project_type === 'modpack') {
-    const packs = Object.values(await list(true).catch(handleError))
-    if (
-      packs.length === 0 ||
-      !packs
-        .map((value) => value.metadata)
-        .find((pack) => pack.linked_data?.project_id === data.value.id)
-    ) {
-      await packInstall(
-        data.value.id,
-        queuedVersionData.id,
-        data.value.title,
-        data.value.icon_url,
-      ).catch(handleError)
-
-      mixpanel_track('PackInstall', {
-        id: data.value.id,
-        version_id: queuedVersionData.id,
-        title: data.value.title,
-        source: 'ProjectPage'
-      })
-    } else {
-      confirmModal.value.show(
-        data.value.id,
-        queuedVersionData.id,
-        data.value.title,
-        data.value.icon_url,
-      )
-    }
-  } else {
-    if (instance.value) {
-      if (!version) {
-        const gameVersion = instance.value.metadata.game_version
-        const loader = instance.value.metadata.loader
-        const selectedVersion = versions.value.find(
-          (v) =>
-            v.game_versions.includes(gameVersion) &&
-            (data.value.project_type === 'mod'
-              ? v.loaders.includes(loader) || v.loaders.includes('minecraft')
-              : true),
-        )
-        if (!selectedVersion) {
-          incompatibilityWarning.value.show(
-            instance.value,
-            data.value.title,
-            versions.value,
-            markInstalled,
-            data.value.id,
-            data.value.project_type,
-          )
-          installing.value = false
-          return
-        } else {
-          queuedVersionData = selectedVersion
-          await installMod(instance.value.path, selectedVersion.id).catch(handleError)
-          await installVersionDependencies(instance.value, queuedVersionData)
-          installedVersion.value = selectedVersion.id
-          mixpanel_track('ProjectInstall', {
-            loader: instance.value.metadata.loader,
-            game_version: instance.value.metadata.game_version,
-            id: data.value.id,
-            project_type: data.value.project_type,
-            version_id: queuedVersionData.id,
-            title: data.value.title,
-            source: 'ProjectPage'
-          })
-        }
-      } else {
-        const gameVersion = instance.value.metadata.game_version
-        const loader = instance.value.metadata.loader
-        const compatible = versions.value.some(
-          (v) =>
-            v.game_versions.includes(gameVersion) &&
-            (data.value.project_type === 'mod'
-              ? v.loaders.includes(loader) || v.loaders.includes('minecraft')
-              : true),
-        )
-        if (compatible) {
-          await installMod(instance.value.path, queuedVersionData.id).catch(handleError)
-          await installVersionDependencies(instance.value, queuedVersionData)
-          installedVersion.value = queuedVersionData.id
-          mixpanel_track('ProjectInstall', {
-            loader: instance.value.metadata.loader,
-            game_version: instance.value.metadata.game_version,
-            id: data.value.id,
-            project_type: data.value.project_type,
-            version_id: queuedVersionData.id,
-            title: data.value.title,
-            source: 'ProjectPage'
-          })
-        } else {
-          incompatibilityWarning.value.show(
-            instance.value,
-            data.value.title,
-            [queuedVersionData],
-            markInstalled,
-            data.value.id,
-            data.value.project_type,
-          )
-          installing.value = false
-          return
-        }
+      if (instance.value && version) {
+        installed.value = true
+        installedVersion.value = version
       }
-      installed.value = true
-    } else {
-      modInstallModal.value.show(
-        data.value.id,
-        version ? [versions.value.find((v) => v.id === queuedVersionData.id)] : versions.value,
-        data.value.title,
-        data.value.project_type,
-      )
-    }
-  }
-
-  installing.value = false
+    },
+  )
 }
 
 const handleRightClick = (e) => {
@@ -674,6 +440,7 @@ const handleOptionsClick = (args) => {
 
     &:focus-visible,
     &:hover {
+
       svg,
       img,
       span {
@@ -682,6 +449,7 @@ const handleOptionsClick = (args) => {
     }
 
     &:active {
+
       svg,
       img,
       span {

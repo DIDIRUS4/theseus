@@ -1,16 +1,18 @@
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::{atomic::AtomicBool, Arc};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+// use chrono::format;
+use discord_rich_presence::activity::Timestamps;
 use discord_rich_presence::{
     activity::{Activity, Assets},
     DiscordIpc, DiscordIpcClient,
 };
-use discord_rich_presence::activity::Timestamps;
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
 use tokio::io;
 use tokio::sync::RwLock;
 
+// use crate::state::{Process, Profile};
 use crate::State;
 
 pub struct DiscordGuard {
@@ -18,14 +20,15 @@ pub struct DiscordGuard {
     connected: Arc<AtomicBool>,
 }
 
-const PACKAGE_JSON_CONTENT: &str = include_str!("../../../../apps/app-frontend/package.json");
+const PACKAGE_JSON_CONTENT: &str =
+    include_str!("../../../../apps/app-frontend/package.json");
 pub(crate) const ACTIVE_PHRASES: [&str; 6] = [
     "Explores",
     "Travels with",
     "Pirating",
     "Investigating the",
     "Engaged in",
-    "Conducting"
+    "Conducting",
 ];
 pub(crate) const INACTIVE_PHRASES: [&str; 6] = [
     "Idling...",
@@ -33,7 +36,7 @@ pub(crate) const INACTIVE_PHRASES: [&str; 6] = [
     "Taking a break...",
     "Resting...",
     "On standby...",
-    "In a holding pattern..."
+    "In a holding pattern...",
 ];
 
 #[derive(Serialize, Deserialize)]
@@ -45,7 +48,7 @@ struct Launcher {
 impl DiscordGuard {
     /// Initialize discord IPC client, and attempt to connect to it
     /// If it fails, it will still return a DiscordGuard, but the client will be unconnected
-    pub async fn init(is_offline: bool) -> crate::Result<DiscordGuard> {
+    pub async fn init() -> crate::Result<DiscordGuard> {
         let mut dipc =
             // DiscordIpcClient::new("1123683254248148992").map_err(|e| {
             //     crate::ErrorKind::OtherError(format!(
@@ -59,13 +62,10 @@ impl DiscordGuard {
                     e,
                 ))
             })?;
-        let connected = if !is_offline {
-            let res = dipc.connect(); // Do not need to connect to Discord to use app
-            if res.is_ok() {
-                Arc::new(AtomicBool::new(true))
-            } else {
-                Arc::new(AtomicBool::new(false))
-            }
+
+        let res = dipc.connect(); // Do not need to connect to Discord to use app
+        let connected = if res.is_ok() {
+            Arc::new(AtomicBool::new(true))
         } else {
             Arc::new(AtomicBool::new(false))
         };
@@ -90,19 +90,6 @@ impl DiscordGuard {
         true
     }
 
-    // check online
-    pub async fn check_online(&self) -> bool {
-        let state = match State::get().await {
-            Ok(s) => s,
-            Err(_) => return false,
-        };
-        let offline = state.offline.read().await;
-        if *offline {
-            return false;
-        }
-        true
-    }
-
     /// Set the activity to the given message
     /// First checks if discord is disabled, and if so, clear the activity instead
     pub async fn set_activity(
@@ -110,14 +97,10 @@ impl DiscordGuard {
         msg: &str,
         reconnect_if_fail: bool,
     ) -> crate::Result<()> {
-        if !self.check_online().await {
-            return Ok(());
-        }
-
         // Check if discord is disabled, and if so, clear the activity instead
         let state = State::get().await?;
-        let settings = state.settings.read().await;
-        if settings.disable_discord_rpc {
+        let settings = crate::state::Settings::get(&state.pool).await?;
+        if !settings.discord_rpc {
             Ok(self.clear_activity(true).await?)
         } else {
             Ok(self.force_set_activity(msg, reconnect_if_fail).await?)
@@ -144,27 +127,32 @@ impl DiscordGuard {
 
         fn read_package_json() -> io::Result<Launcher> {
             // Deserialize the content of package.json into a Launcher struct
-            let launcher: Launcher = serde_json::from_str(PACKAGE_JSON_CONTENT)?;
+            let launcher: Launcher =
+                serde_json::from_str(PACKAGE_JSON_CONTENT)?;
 
             Ok(launcher)
         }
 
         let launcher = read_package_json()?;
 
-        let build_info = format!("AR • v{}{}", launcher.version, launcher.patch_version);
+        let build_info =
+            format!("AR • v{}{}", launcher.version, launcher.patch_version);
         let build_download = "https://astralium.su/get/ar";
 
         let time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Failed to get system time")
             .as_secs() as i64;
-        let activity = Activity::new().state(msg).assets(
-            Assets::new()
-                .large_image("astralrinth_logo")
-                .large_text(&build_info)
-                .small_image("astralrinth_logo")
-                .small_text(&build_download)
-        ).timestamps(Timestamps::new().start(time));
+        let activity = Activity::new()
+            .state(msg)
+            .assets(
+                Assets::new()
+                    .large_image("astralrinth_logo")
+                    .large_text(&build_info)
+                    .small_image("astralrinth_logo")
+                    .small_text(&build_download),
+            )
+            .timestamps(Timestamps::new().start(time));
 
         // Attempt to set the activity
         // If the existing connection fails, attempt to reconnect and try again
@@ -203,7 +191,7 @@ impl DiscordGuard {
         reconnect_if_fail: bool,
     ) -> crate::Result<()> {
         // Attempt to connect if not connected. Do not continue if it fails, as the client.clear_activity can panic if it never was connected
-        if !self.check_online().await || !self.retry_if_not_ready().await {
+        if !self.retry_if_not_ready().await {
             return Ok(());
         }
 
@@ -242,35 +230,33 @@ impl DiscordGuard {
         &self,
         reconnect_if_fail: bool,
     ) -> crate::Result<()> {
-        let state: Arc<tokio::sync::RwLockReadGuard<'_, State>> =
-            State::get().await?;
+        let state = State::get().await?;
 
-        {
-            let settings = state.settings.read().await;
-            if settings.disable_discord_rpc {
-                println!("Discord is disabled, clearing activity");
-                return self.clear_activity(true).await;
-            }
+        let settings = crate::state::Settings::get(&state.pool).await?;
+        if !settings.discord_rpc {
+            println!("Discord is disabled, clearing activity");
+            return self.clear_activity(true).await;
         }
 
-        if let Some(existing_child) = state
-            .children
-            .read()
-            .await
-            .running_profile_paths()
-            .await?
-            .first()
-        {
-            let selected_phrase = ACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();
-            self.set_activity(
-                &format!("{} {}", selected_phrase, existing_child),
-                reconnect_if_fail,
-            )
-                .await?;
-        } else {
-            let selected_phrase = INACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();
-            self.set_activity(&format!("{}", selected_phrase), reconnect_if_fail).await?;
-        }
+        // let running_profiles = Process::get_all(&state.pool).await?;
+        // if let Some(existing_child) = running_profiles.first() {
+        //     let prof =
+        //         Profile::get(&existing_child.profile_path, &state.pool).await?;
+        //     if let Some(prof) = prof {
+        //         let selected_phrase =
+        //             ACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();
+        //         self.set_activity(
+        //             &format!("{} {}", selected_phrase, prof.name),
+        //             reconnect_if_fail,
+        //         )
+        //         .await?;
+        //     }
+        // } else {
+        let selected_phrase =
+            INACTIVE_PHRASES.choose(&mut rand::thread_rng()).unwrap();
+        self.set_activity(&format!("{}", selected_phrase), reconnect_if_fail)
+            .await?;
+        // }
         Ok(())
     }
 }
