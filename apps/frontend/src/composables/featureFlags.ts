@@ -20,7 +20,7 @@ export const DEFAULT_FEATURE_FLAGS = validateValues({
   // Developer flags
   developerMode: false,
   showVersionFilesInTable: false,
-  showAdsWithPlus: false,
+  // showAdsWithPlus: false,
 
   // Feature toggles
   projectTypesPrimaryNav: false,

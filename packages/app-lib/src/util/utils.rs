@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 use tokio::io;
 
 const PACKAGE_JSON_CONTENT: &str =
-    include_str!("../../../../apps/app-frontend/package.json");
+    // include_str!("../../../../apps/app-frontend/package.json");
+    include_str!("../../../../apps/app/tauri.conf.json");
 
 #[derive(Serialize, Deserialize)]
 pub struct Launcher {
-    pub version: String,
-    pub development_build: bool,
+    pub version: String
 }
 
 pub fn read_package_json() -> io::Result<Launcher> {

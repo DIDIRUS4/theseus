@@ -21,10 +21,10 @@ const props = defineProps({
       return () => { }
     },
   },
-  showAdOnClose: {
-    type: Boolean,
-    default: true,
-  },
+  // showAdOnClose: {
+  //   type: Boolean,
+  //   default: true,
+  // },
 })
 const modal = ref(null)
 

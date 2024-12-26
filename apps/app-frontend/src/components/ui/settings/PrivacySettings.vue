@@ -26,7 +26,7 @@ watch(
     <div>
       <h2 class="m-0 text-lg font-extrabold text-contrast">Personalized ads</h2>
       <p class="m-0 text-sm">
-        Modrinth's ad provider, Aditude, shows ads based on your preferences. By disabling this
+        (Hard disabled by AR) • Modrinth's ad provider, Aditude, shows ads based on your preferences. By disabling this
         option, you opt out and ads will no longer be shown based on your interests.
       </p>
     </div>
@@ -34,6 +34,7 @@ watch(
       id="personalized-ads"
       :model-value="settings.personalized_ads"
       :checked="settings.personalized_ads"
+      :disabled="!settings.personalized_ads"
       @update:model-value="
         (e) => {
           settings.personalized_ads = e
@@ -46,7 +47,7 @@ watch(
     <div>
       <h2 class="m-0 text-lg font-extrabold text-contrast">Telemetry</h2>
       <p class="m-0 text-sm">
-        Modrinth collects anonymized analytics and usage data to improve our user experience and
+        (Hard disabled by AR) • Modrinth collects anonymized analytics and usage data to improve our user experience and
         customize your experience. By disabling this option, you opt out and your data will no
         longer be collected.
       </p>
@@ -55,6 +56,7 @@ watch(
       id="opt-out-analytics"
       :model-value="settings.telemetry"
       :checked="settings.telemetry"
+      :disabled="!settings.telemetry"
       @update:model-value="
         (e) => {
           settings.telemetry = e

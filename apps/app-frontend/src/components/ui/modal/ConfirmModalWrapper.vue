@@ -37,10 +37,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  showAdOnClose: {
-    type: Boolean,
-    default: true,
-  },
+  // showAdOnClose: {
+  //   type: Boolean,
+  //   default: true,
+  // },
 })
 
 const emit = defineEmits(['proceed'])
@@ -51,7 +51,7 @@ defineExpose({
     modal.value.show()
   },
   hide: () => {
-    onModalHide()
+    // onModalHide()
     modal.value.hide()
   },
 })

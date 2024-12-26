@@ -23,7 +23,7 @@ import { useLoading, useTheming } from '@/store/state'
 // import ModrinthAppLogo from '@/assets/modrinth_app.svg?component'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import InstanceCreationModal from '@/components/ui/InstanceCreationModal.vue'
-import { get } from '@/helpers/settings'
+import { get, set } from '@/helpers/settings'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
 import RunningAppBar from '@/components/ui/RunningAppBar.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
@@ -100,6 +100,14 @@ onUnmounted(() => {
 
 async function setupApp() {
   stateInitialized.value = true
+
+  const settings = await get()
+
+  // Patched
+  settings.personalized_ads = false
+  settings.telemetry = false
+  await set(settings)
+
   const {
     native_decorations,
     theme,
@@ -112,7 +120,8 @@ async function setupApp() {
     toggle_sidebar,
     developer_mode,
     feature_flags,
-  } = await get()
+  } = settings
+
 
   if (default_page === 'Library') {
     await router.push('/library')
@@ -141,9 +150,13 @@ async function setupApp() {
 
   initAnalytics()
   if (!telemetry) {
-    console.info("[AstralRinth] Telemetry disabled by default (Hard patched in code).")
+    console.info("[AR] Telemetry disabled by default (Hard patched).")
     optOutAnalytics()
   }
+  if (!personalized_ads) {
+    console.info("[AR] Personalized ads disabled by default (Hard patched).")
+  }
+
   if (dev) debugAnalytics()
   trackEvent('Launched', { version, dev, onboarded })
 

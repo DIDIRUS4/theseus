@@ -655,12 +655,12 @@
           :tags="tags"
           class="card flex-card experimental-styles-within"
         />
-        <AdPlaceholder
+        <!-- <AdPlaceholder
           v-if="
             (!auth.user || !isPermission(auth.user.badges, 1 << 0) || flags.showAdsWithPlus) &&
             tags.approvedStatuses.includes(project.status)
           "
-        />
+        /> -->
         <ProjectSidebarLinks
           :project="project"
           :link-target="$external()"
@@ -843,7 +843,7 @@ import ModerationChecklist from "~/components/ui/ModerationChecklist.vue";
 import Accordion from "~/components/ui/Accordion.vue";
 import ModrinthIcon from "~/assets/images/utils/modrinth.svg?component";
 import AutomaticAccordion from "~/components/ui/AutomaticAccordion.vue";
-import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
+// import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
 
 const data = useNuxtApp();
 const route = useNativeRoute();
