@@ -1,6 +1,8 @@
 import { ref } from 'vue'
-import { version } from '../../package.json'
+import { getVersion } from '@tauri-apps/api/app'
 import { getArtifact, getOS } from '@/helpers/utils.js'
+
+const version = await getVersion()
 
 export const allowState = ref(false)
 export const installState = ref(false)

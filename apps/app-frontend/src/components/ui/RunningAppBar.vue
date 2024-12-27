@@ -48,6 +48,9 @@
     <ModalWrapper ref="confirmUpdate" :has-to-type="false" header="Request to update the AstralRinth launcher">
       <div class="modal-body">
         <div class="markdown-body">
+          <p>The new version of the AstralRinth launcher is available.</p>
+          <p>Your version is outdated. We recommend that you update to the latest version.</p>
+          <p>Warning:</p>
           <p>
             Before updating, make sure that you have saved all running instances and made a backup copy of the instances
             that are valuable to you. Remember that the authors of the product are not responsible for the breakdown of
@@ -61,7 +64,7 @@
         <div class="button-group push-right">
           <Button class="download-modal" @click="confirmUpdate.hide()">
             Decline</Button>
-          <Button class="download-modal" @click="approvedUpdating()">
+          <Button class="download-modal" @click="approveUpdate()">
             Accept
           </Button>
         </div>
@@ -115,7 +118,9 @@ import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { handleError } from '@/store/notifications.js'
 import { get_many } from '@/helpers/profile.js'
 import { trackEvent } from '@/helpers/analytics'
-import { version } from '../../../package.json'
+import { getVersion } from '@tauri-apps/api/app'
+
+const version = await getVersion()
 
 import { installState, getRemote, updateState } from '@/helpers/update.js'
 import ModalWrapper from './modal/ModalWrapper.vue'
@@ -126,7 +131,7 @@ const confirmUpdating = async () => {
   confirmUpdate.value.show()
 }
 
-const approvedUpdating = async () => {
+const approveUpdate = async () => {
   confirmUpdate.value.hide()
   await getRemote(true, true)
 }
