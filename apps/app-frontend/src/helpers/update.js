@@ -11,11 +11,9 @@ export const latestBetaCommitLink = ref('')
 export const launcherUrl = 'https://www.astralium.su/get/ar'
 
 const os = ref('')
-const version = await getVersion()
 const releaseLink = `https://api.github.com/repos/DIDIRUS4/AstralRinth/releases/latest`
 const branchesLink = `https://api.github.com/repos/DIDIRUS4/AstralRinth/branches`
 const failedFetch = [`Failed to fetch remote releases:`, `Failed to fetch remote commits:`]
-const localVersion = `v${version}`
 const betaBranch = `beta` // Github repository beta branch
 const osNames = ['macos', 'windows', 'linux']
 const macExtension = `.dmg` // MacOS file type for download
@@ -99,8 +97,9 @@ export async function getRemote(elementIdBool, downloadArtifactBool) {
       } else {
         remoteVersion = latestRelease
       }
+      console.log(await getVersion())
       if (osNames.includes(os.value.toLowerCase())) {
-        if (remoteVersion.startsWith(localVersion)) {
+        if (remoteVersion.startsWith('v' + await getVersion())) {
           updateState.value = false
           allowState.value = false
         } else {
@@ -113,7 +112,7 @@ export async function getRemote(elementIdBool, downloadArtifactBool) {
       }
       console.log('Update available state is', updateState.value)
       console.log('Remote version is', remoteVersion)
-      console.log('Local version is', localVersion)
+      console.log('Local version is', await getVersion())
       console.log('Operating System is', os.value)
 
       if (downloadArtifactBool) {
