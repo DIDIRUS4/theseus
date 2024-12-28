@@ -11,7 +11,7 @@ export const latestBetaCommitLink = ref('')
 export const launcherUrl = 'https://www.astralium.su/get/ar'
 
 const os = ref('')
-const version = getVersion()
+const version = await getVersion()
 const releaseLink = `https://api.github.com/repos/DIDIRUS4/AstralRinth/releases/latest`
 const branchesLink = `https://api.github.com/repos/DIDIRUS4/AstralRinth/branches`
 const failedFetch = [`Failed to fetch remote releases:`, `Failed to fetch remote commits:`]
