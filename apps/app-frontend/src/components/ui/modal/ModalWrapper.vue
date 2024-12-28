@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Modal } from '@modrinth/ui'
-
+import { NewModal as Modal } from '@modrinth/ui'
+// import { show_ads_window, hide_ads_window } from '@/helpers/ads.js'
 import { useTheming } from '@/store/theme.js'
 
 const themeStore = useTheming()
@@ -21,8 +21,11 @@ const props = defineProps({
       return () => { }
     },
   },
+  // showAdOnClose: {
+  //   type: Boolean,
+  //   default: true,
+  // },
 })
-
 const modal = ref(null)
 
 defineExpose({
@@ -36,12 +39,18 @@ defineExpose({
 })
 
 function onModalHide() {
+  // if (props.showAdOnClose) {
+  //   show_ads_window()
+  // }
   props.onHide()
 }
 </script>
 
 <template>
   <Modal ref="modal" :header="header" :noblur="!themeStore.advancedRendering" @hide="onModalHide">
+    <template #title>
+      <slot name="title" />
+    </template>
     <slot />
   </Modal>
 </template>

@@ -1,15 +1,12 @@
 <template>
   <div class="action-groups">
-    <a href="https://support.modrinth.com" class="link">
-      <ChatIcon />
-      <span> Get support </span>
-    </a>
-    <Button v-if="currentLoadingBars.length > 0" ref="infoButton" icon-only class="icon-button show-card-icon"
-      @click="toggleCard()">
-      <DownloadIcon />
-    </Button>
+    <ButtonStyled v-if="currentLoadingBars.length > 0" color="brand" type="transparent" circular>
+      <button ref="infoButton" @click="toggleCard()">
+        <DownloadIcon />
+      </button>
+    </ButtonStyled>
     <div v-if="offline" class="status">
-      <span class="circle stopped" />
+      <UnplugIcon />
       <div class="running-text">
         <span> Offline </span>
       </div>
@@ -31,10 +28,6 @@
       <Button v-tooltip="'View logs'" icon-only class="icon-button" @click="goToTerminal()">
         <TerminalSquareIcon />
       </Button>
-      <Button v-if="currentLoadingBars.length > 0" ref="infoButton" icon-only class="icon-button show-card-icon"
-        @click="toggleCard()">
-        <DownloadIcon />
-      </Button>
     </div>
     <div v-else class="status">
       <span class="circle stopped" />
@@ -55,6 +48,9 @@
     <ModalWrapper ref="confirmUpdate" :has-to-type="false" header="Request to update the AstralRinth launcher">
       <div class="modal-body">
         <div class="markdown-body">
+          <p>The new version of the AstralRinth launcher is available.</p>
+          <p>Your version is outdated. We recommend that you update to the latest version.</p>
+          <p>Warning:</p>
           <p>
             Before updating, make sure that you have saved all running instances and made a backup copy of the instances
             that are valuable to you. Remember that the authors of the product are not responsible for the breakdown of
@@ -68,7 +64,7 @@
         <div class="button-group push-right">
           <Button class="download-modal" @click="confirmUpdate.hide()">
             Decline</Button>
-          <Button class="download-modal" @click="approvedUpdating()">
+          <Button class="download-modal" @click="approveUpdate()">
             Accept
           </Button>
         </div>
@@ -105,8 +101,14 @@
 </template>
 
 <script setup>
-import { DownloadIcon, StopCircleIcon, TerminalSquareIcon, DropdownIcon } from '@modrinth/assets'
-import { Button, Card } from '@modrinth/ui'
+import {
+  DownloadIcon,
+  StopCircleIcon,
+  TerminalSquareIcon,
+  DropdownIcon,
+  UnplugIcon,
+} from '@modrinth/assets'
+import { Button, ButtonStyled, Card } from '@modrinth/ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { get_all as getRunningProcesses, kill as killProcess } from '@/helpers/process'
 import { loading_listener, process_listener } from '@/helpers/events'
@@ -114,10 +116,11 @@ import { useRouter } from 'vue-router'
 import { progress_bars_list } from '@/helpers/state.js'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import { handleError } from '@/store/notifications.js'
-import { ChatIcon } from '@/assets/icons'
 import { get_many } from '@/helpers/profile.js'
 import { trackEvent } from '@/helpers/analytics'
-import { version } from '../../../package.json'
+import { getVersion } from '@tauri-apps/api/app'
+
+const version = await getVersion()
 
 import { installState, getRemote, updateState } from '@/helpers/update.js'
 import ModalWrapper from './modal/ModalWrapper.vue'
@@ -128,7 +131,7 @@ const confirmUpdating = async () => {
   confirmUpdate.value.show()
 }
 
-const approvedUpdating = async () => {
+const approveUpdate = async () => {
   confirmUpdate.value.hide()
   await getRemote(true, true)
 }
@@ -518,10 +521,6 @@ onBeforeUnmount(() => {
     width: 2.25rem;
     height: 2.25rem;
   }
-}
-
-.show-card-icon {
-  color: var(--color-brand);
 }
 
 .download-enter-active,

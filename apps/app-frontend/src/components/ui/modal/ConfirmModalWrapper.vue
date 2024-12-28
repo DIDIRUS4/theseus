@@ -6,7 +6,7 @@ import { useTheming } from '@/store/theme.js'
 
 const themeStore = useTheming()
 
-defineProps({
+const props = defineProps({
   confirmationText: {
     type: String,
     default: '',
@@ -25,10 +25,22 @@ defineProps({
     default: 'No description defined',
     required: true,
   },
+  proceedIcon: {
+    type: Object,
+    default: undefined,
+  },
   proceedLabel: {
     type: String,
     default: 'Proceed',
   },
+  danger: {
+    type: Boolean,
+    default: true,
+  },
+  // showAdOnClose: {
+  //   type: Boolean,
+  //   default: true,
+  // },
 })
 
 const emit = defineEmits(['proceed'])
@@ -39,10 +51,16 @@ defineExpose({
     modal.value.show()
   },
   hide: () => {
-    onModalHide()
+    // onModalHide()
     modal.value.hide()
   },
 })
+
+// function onModalHide() {
+//   if (props.showAdOnClose) {
+//     show_ads_window()
+//   }
+// }
 
 function proceed() {
   emit('proceed')
@@ -50,7 +68,17 @@ function proceed() {
 </script>
 
 <template>
-  <ConfirmModal ref="modal" :confirmation-text="confirmationText" :has-to-type="hasToType" :title="title"
-    :description="description" :proceed-label="proceedLabel" :on-hide="onModalHide"
-    :noblur="!themeStore.advancedRendering" @proceed="proceed" />
+  <ConfirmModal
+    ref="modal"
+    :confirmation-text="confirmationText"
+    :has-to-type="hasToType"
+    :title="title"
+    :description="description"
+    :proceed-icon="proceedIcon"
+    :proceed-label="proceedLabel"
+    :on-hide="onModalHide"
+    :noblur="!themeStore.advancedRendering"
+    :danger="danger"
+    @proceed="proceed"
+  />
 </template>

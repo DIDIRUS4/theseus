@@ -31,19 +31,21 @@ window.addEventListener('online', () => {
 const getInstances = async () => {
   const profiles = await list().catch(handleError)
 
-  recentInstances.value = profiles.sort((a, b) => {
-    const dateA = dayjs(a.last_played ?? 0)
-    const dateB = dayjs(b.last_played ?? 0)
+  recentInstances.value = profiles
+    .filter((x) => x.last_played)
+    .sort((a, b) => {
+      const dateA = dayjs(a.last_played)
+      const dateB = dayjs(b.last_played)
 
-    if (dateA.isSame(dateB)) {
-      return a.name.localeCompare(b.name)
-    }
+      if (dateA.isSame(dateB)) {
+        return a.name.localeCompare(b.name)
+      }
 
-    return dateB - dateA
-  })
+      return dateB - dateA
+    })
 
   const filters = []
-  for (const instance of recentInstances.value) {
+  for (const instance of profiles) {
     if (instance.linked_data && instance.linked_data.project_id) {
       filters.push(`NOT"project_id"="${instance.linked_data.project_id}"`)
     }
@@ -99,37 +101,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="page-container">
-    <RowDisplay v-if="total > 0" :instances="[
-      {
-        label: 'Jump back in',
-        route: '/library',
-        instances: recentInstances,
-        instance: true,
-        downloaded: true,
-      },
-      {
-        label: 'Popular packs',
-        route: '/browse/modpack',
-        instances: featuredModpacks,
-        downloaded: false,
-      },
-      {
-        label: 'Popular mods',
-        route: '/browse/mod',
-        instances: featuredMods,
-        downloaded: false,
-      },
-    ]" :can-paginate="true" />
+  <div class="p-6 flex flex-col gap-2">
+    <h1 v-if="recentInstances" class="m-0 text-2xl">Welcome back!</h1>
+    <h1 v-else class="m-0 text-2xl">Welcome to AstralRinth App!</h1>
+    <RowDisplay
+      v-if="total > 0"
+      :instances="[
+        {
+          label: 'Recently played',
+          route: '/library',
+          instances: recentInstances,
+          instance: true,
+          downloaded: true,
+          compact: true,
+        },
+        {
+          label: 'Discover a modpack',
+          route: '/browse/modpack',
+          instances: featuredModpacks,
+          downloaded: false,
+        },
+        {
+          label: 'Discover mods',
+          route: '/browse/mod',
+          instances: featuredMods,
+          downloaded: false,
+        },
+      ]"
+      :can-paginate="true"
+    />
   </div>
 </template>
-
-<style lang="scss" scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-</style>

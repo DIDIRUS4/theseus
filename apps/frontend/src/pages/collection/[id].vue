@@ -247,9 +247,9 @@
             </div>
           </template>
         </div>
-        <AdPlaceholder
+        <!-- <AdPlaceholder
           v-if="!auth.user || !isPermission(auth.user.badges, 1 << 0) || flags.showAdsWithPlus"
-        />
+        /> -->
       </div>
       <div class="normal-page__content">
         <nav class="navigation-card">
@@ -380,7 +380,14 @@ import {
   LibraryIcon,
   BoxIcon,
 } from "@modrinth/assets";
-import { PopoutMenu, FileInput, DropdownSelect, Avatar, Button } from "@modrinth/ui";
+import {
+  PopoutMenu,
+  FileInput,
+  DropdownSelect,
+  Avatar,
+  Button,
+  commonMessages,
+} from "@modrinth/ui";
 
 import WorldIcon from "assets/images/utils/world.svg";
 import UpToDate from "assets/images/illustrations/up_to_date.svg";
@@ -388,7 +395,7 @@ import { addNotification } from "~/composables/notifs.js";
 import ModalConfirm from "~/components/ui/ModalConfirm.vue";
 import NavRow from "~/components/ui/NavRow.vue";
 import ProjectCard from "~/components/ui/ProjectCard.vue";
-import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
+// import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
 
 const vintl = useVIntl();
 const { formatMessage } = vintl;

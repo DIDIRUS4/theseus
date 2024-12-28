@@ -84,14 +84,14 @@
           </template>
           <template #stats>
             <div
-              class="flex items-center gap-2 border-0 border-r border-solid border-button-bg pr-4 font-semibold"
+              class="flex items-center gap-2 border-0 border-r border-solid border-divider pr-4 font-semibold"
             >
               <UsersIcon class="h-6 w-6 text-secondary" />
               {{ formatCompactNumber(acceptedMembers?.length || 0) }}
               members
             </div>
             <div
-              class="flex items-center gap-2 border-0 border-r border-solid border-button-bg pr-4 font-semibold"
+              class="flex items-center gap-2 border-0 border-r border-solid border-divider pr-4 font-semibold"
             >
               <BoxIcon class="h-6 w-6 text-secondary" />
               {{ formatCompactNumber(projects?.length || 0) }}
@@ -140,9 +140,9 @@
         </ContentPageHeader>
       </div>
       <div class="normal-page__sidebar">
-        <AdPlaceholder
+        <!-- <AdPlaceholder
           v-if="!auth.user || !isPermission(auth.user.badges, 1 << 0) || flags.showAdsWithPlus"
-        />
+        /> -->
 
         <div class="card flex-card">
           <h2>Members</h2>
@@ -252,13 +252,20 @@ import {
   XIcon,
   ClipboardCopyIcon,
 } from "@modrinth/assets";
-import { Avatar, ButtonStyled, Breadcrumbs, ContentPageHeader, OverflowMenu } from "@modrinth/ui";
+import {
+  Avatar,
+  ButtonStyled,
+  Breadcrumbs,
+  ContentPageHeader,
+  OverflowMenu,
+  commonMessages,
+} from "@modrinth/ui";
 import NavStack from "~/components/ui/NavStack.vue";
 import NavStackItem from "~/components/ui/NavStackItem.vue";
 import ModalCreation from "~/components/ui/ModalCreation.vue";
 import UpToDate from "~/assets/images/illustrations/up_to_date.svg?component";
 import ProjectCard from "~/components/ui/ProjectCard.vue";
-import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
+// import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
 
 import OrganizationIcon from "~/assets/images/utils/organization.svg?component";
 import DownloadIcon from "~/assets/images/utils/download.svg?component";

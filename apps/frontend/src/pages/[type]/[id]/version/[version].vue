@@ -661,7 +661,7 @@ import RightArrowIcon from "~/assets/images/utils/right-arrow.svg?component";
 import Modal from "~/components/ui/Modal.vue";
 import ChevronRightIcon from "~/assets/images/utils/chevron-right.svg?component";
 
-import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
+// import AdPlaceholder from "~/components/ui/AdPlaceholder.vue";
 export default defineNuxtComponent({
   components: {
     MarkdownEditor,
