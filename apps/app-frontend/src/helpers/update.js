@@ -97,7 +97,6 @@ export async function getRemote(elementIdBool, downloadArtifactBool) {
       } else {
         remoteVersion = latestRelease
       }
-      console.log(await getVersion())
       if (osNames.includes(os.value.toLowerCase())) {
         if (remoteVersion.startsWith('v' + await getVersion())) {
           updateState.value = false
