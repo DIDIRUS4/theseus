@@ -59,7 +59,7 @@ Dive into the extraordinary world of AstralRinth, a fork of the original project
 
 # Getting Started
 To begin your AstralRinth adventure, follow these steps:
-1. **Download Your OS Version**: Head over to our [releases page](https://github.com/DIDIRUS4/AstralRinth/releases) to find the right file for your operating system.
+1. **Download Your OS Version**: Head over to our [releases page](https://github.com/DIDIRUS4/AstralRinth/releases/latest) to find the right file for your operating system.
    - **Choosing the Correct File**: Ensure you select the file that matches your OS requirements.
    - [**How select file**](#downloadable-file-extensions)
    - [**How select release**](#installation-subjects)
