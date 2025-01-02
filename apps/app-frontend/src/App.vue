@@ -753,20 +753,20 @@ function handleAuxClick(e) {
   --color-divider-dark: var(--brand-gradient-border);
 }
 
-.app-sidebar::after {
-  content: '';
-  position: absolute;
-  bottom: 250px;
-  left: 0;
-  right: 0;
-  height: 5rem;
-  background: var(--brand-gradient-fade-out-color);
-  pointer-events: none;
-}
+// .app-sidebar::after {
+//   content: '';
+//   position: absolute;
+//   bottom: 250px;
+//   left: 0;
+//   right: 0;
+//   height: 5rem;
+//   background: var(--brand-gradient-fade-out-color);
+//   pointer-events: none;
+// }
 
-.app-sidebar.has-plus::after {
-  display: none;
-}
+// .app-sidebar.has-plus::after {
+//   display: none;
+// }
 
 .app-sidebar::before {
   content: '';
