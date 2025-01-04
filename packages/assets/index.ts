@@ -204,12 +204,16 @@ import './omorphia.scss'
 import _PirateIcon from './icons/pirate.svg?component'
 import _MicrosoftIcon from './icons/microsoft.svg?component'
 import _PirateShipIcon from './icons/pirate-ship.svg?component'
+import _AstralRinthLogo from './icons/astralrinth-logo.svg?component'
 
 // AstralRinth Exports
 
 export const PirateIcon = _PirateIcon
 export const MicrosoftIcon = _MicrosoftIcon
 export const PirateShipIcon = _PirateShipIcon
+export const AstralRinthLogo = _AstralRinthLogo
+
+// Modrinth Exports
 
 export const ModrinthIcon = _ModrinthIcon
 export const FourOhFourNotFound = _FourOhFourNotFound

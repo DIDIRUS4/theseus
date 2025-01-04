@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   ReportIcon,
-  ModrinthIcon,
+  AstralRinthLogo,
   ShieldIcon,
   SettingsIcon,
   GaugeIcon,
@@ -143,7 +143,7 @@ function devModeCount() {
               :class="{ 'text-brand': themeStore.devMode, 'text-secondary': !themeStore.devMode }"
               @click="devModeCount"
             >
-              <ModrinthIcon class="w-6 h-6" />
+              <AstralRinthLogo class="w-6 h-6" />
             </button>
             <div>
               <p class="m-0">AstralRinth App {{ version }}</p>
